@@ -2,6 +2,6 @@
     "require": {
         "focus-cms/composer-focus-module-installer": "*",
         "focus-cms/composer-focus-theme-installer": "*",
-        "istvan/focus-cms-core-shortcodes": "@dev"
+        "focus-cms/focus-cms-core-shortcodes": "@dev"
     }
 }
