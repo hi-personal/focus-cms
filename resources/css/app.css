@@ -1,0 +1,19 @@
+/* resources/css/app.css */
+/*@import './tinymce.css';*/
+/*@import 'boxicons/css/boxicons.css';*/
+@import '@mdi/font/css/materialdesignicons.min.css';
+/*@import '@mdi/light-font/css/materialdesignicons-light.min.css';*/
+
+@import '@uppy/core/dist/style.css';
+@import '@uppy/dashboard/dist/style.css';
+
+/*@import './Themes/FocusDefaultTheme/public/css/theme.css';
+/*/
+
+
+/*
+ * TAILWIND
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

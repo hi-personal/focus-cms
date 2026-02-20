@@ -1,0 +1,461 @@
+/* === TOC START ===
+// 🔹 Table of Contents (Generated)
+//
+// === ANCHOR ===
+// 91#ANCHOR: Kép album - kép választó formázás
+//
+=== TOC END === */
+
+#twteszt {
+    @apply m-4 p-4 bg-blue-500 text-black;
+}
+
+
+/* Alapértelmezett szövegstílusok */
+h1 {
+    @apply text-4xl font-bold mt-6 mb-4;
+}
+
+h2 {
+    @apply text-3xl font-semibold mt-6 mb-3;
+}
+
+h3 {
+    @apply text-2xl font-medium mt-5 mb-3;
+}
+
+h4 {
+    @apply text-xl font-medium mt-4 mb-2;
+}
+
+h5 {
+    @apply text-lg font-medium mt-3 mb-2;
+}
+
+h6 {
+    @apply text-base font-semibold mt-2 mb-2;
+}
+
+p {
+    @apply text-base leading-relaxed mb-4;
+}
+
+ul {
+    @apply list-disc pl-6 mb-4;
+}
+
+ol {
+    @apply list-decimal pl-6 mb-4;
+}
+
+li {
+    @apply mb-2;
+}
+
+hr {
+    @apply border-t border-gray-300 my-6;
+}
+
+p {
+
+    @apply  text-lg sm:text-lg md:text-xl text-black ;
+
+}
+
+
+
+.center {
+    @apply justify-center items-center inline-block text-red-800;
+  }
+
+  .table {
+    @apply w-full border-collapse;
+
+    thead {
+      @apply bg-gray-300;
+
+      th {
+        @apply px-4 py-2 text-left font-semibold border border-gray-400;
+      }
+    }
+
+    tbody {
+      tr {
+        @apply border-b border-gray-200;
+
+        &:hover {
+          @apply bg-gray-50;
+        }
+
+        td {
+          @apply px-4 py-2 border border-gray-200;
+        }
+      }
+    }
+
+    /* Optional striped rows */
+    &.striped tbody tr:nth-child(odd) {
+      @apply bg-gray-100;
+    }
+
+    /* Optional condensed version */
+    &.condensed {
+      td, th {
+        @apply px-2 py-1;
+      }
+    }
+  }
+
+
+
+
+
+/*
+ * TOP NAV DROPDOWN
+ */
+[x-cloak] {
+    display: none !important;
+}
+
+
+
+.REMbx {
+    line-height: 0.9 !important;
+}
+
+.mdi.md-18 { font-size: 18px; }
+.mdi.md-24 { font-size: 24px; }
+.mdi.md-36 { font-size: 36px; }
+.mdi.md-48 { font-size: 48px; }
+
+/*p:first-of-type {
+    @apply text-lg font-medium text-gray-900;
+}
+
+
+
+
+
+.content {
+    @apply text-gray-800 dark:text-gray-200;
+    @apply text-base leading-relaxed text-gray-800 max-w-3xl mx-auto px-4 md:text-lg sm:px-6 lg:px-8;
+    @apply text-lg leading-loose text-gray-900 max-w-2xl mx-auto px-5 sm:px-8 lg:px-12;
+    @apply text-gray-800 dark:text-gray-200 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply text-base sm:text-lg md:text-xl leading-relaxed md:leading-loose text-gray-800;
+    @apply bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-sm;
+}
+*/
+
+/**
+ * ANCHOR Kép album - kép választó formázás
+ */
+#imageAlbumPickerModal .selectorImageDiv {
+    padding: 0;
+}
+
+
+
+.image-checkbox-2 {
+    padding: 2px 2px 2px 2px;
+    cursor: pointer;
+    border: 4px solid transparent;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    outline: 0;
+}
+
+.image-checkbox-2-checked {
+    border-color: #0978d3;
+    box-shadow: 0px 0px 0px 2px #ffffff inset;
+    border-radius: 2px;
+    position: relative;
+}
+
+.image-checkbox-2 .fa-check {
+    padding: 4px 6px 4px 6px;
+    background-color: #0978d3;
+    border-width: 1px solid #2196f3;
+    box-shadow: 0px 0px 0px 1px #ffffff inset;
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+}
+
+.image-checkbox-checked-2 .fa-check {
+    display: block;
+}
+
+/**
+ * TinyMCE editor stílusok
+ */
+.tox .tox-tbtn--beside {
+    width: 120px !important; /* Normál gomboknál szélesebb */
+    text-align: center;
+}
+
+
+
+
+.image-options {
+    transition: all 0.3s ease;
+}
+
+.tab-button {
+    transition: background-color 0.2s;
+}
+.tab-button:hover {
+    background-color: #3b82f6;
+    color: white;
+}
+
+
+.gallery-preview {
+    display: inline-block;
+    width: 120px;
+    height: 50px;
+    background: #ddd;
+    text-align: center;
+    line-height: 50px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#editor, #formatted-view {
+    margin: 20px 0px 60px 0px;
+    padding: 6px 6px 6px 6px;
+    width: 100%;
+    height: auto;
+    min-height: 300px;
+    background-color: #ffffff;
+    border-color: rgb(red, green, rgb(0, 0, 255));
+    border-style: solid;
+    border-width: 1px 1px 1px 1px;
+    display: block;
+    position: relative;
+    clear: both;
+}
+
+.gallery-preview {
+    margin: 20px 10px 60px 10px;
+    padding: 10px 10px 10px 10px;
+    width: calc(100% - 22px);
+    height: auto;
+    min-height: 150px;
+    background-color: #e2e2e283;
+    border-color: rgb(red, green, rgb(0, 0, 255));
+    border-style: solid;
+    border-width: 1px 1px 1px 1px;
+    text-align: center;
+    line-height: 50px;
+    border-radius: 5px;
+    display: inline-block;
+
+    position: relative;
+    clear: both;
+    cursor: pointer;
+    user-select: contain;
+}
+
+.shortcode-box {
+    display: inline-block;
+    padding: 5px 10px;
+    background: #f4f4f4;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    margin: 2px;
+    user-select: none;
+}
+
+/* Alapértelmezett stílus a szerkeszthető div-hez */
+#markdown-editor {
+    width: 100%;
+    height: auto;
+    min-height: 150px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    white-space: pre-wrap; /* Megtartja a sortöréseket */
+
+    display: block;
+    position: relative;
+    clear: both;
+}
+
+/* Stílus a [gallery] sorokhoz */
+.gallery-line {
+    padding: 20px;
+    margin: 10px;
+    width: calc(100% - 20px); /* Javított szélesség számítás */
+    height: 100px;
+    color: rgb(68, 0, 255);
+    font-weight: bold;
+    background-color: #646464;
+    display: block;
+    position: relative;
+    text-align: center;
+    line-height: 50px;
+    padding: 5px;
+    margin: 5px 0;
+    user-select: none; /* Letiltja a szöveg kijelölését */
+    cursor: pointer; /* Mutató kurzor */
+    border: 2px solid transparent; /* Átlátszó keret alapértelmezetten */
+}
+
+/* Kijelölt állapot stílusa */
+.gallery-line.selected {
+    border: 2px solid blue; /* Kék keret kijelöléskor */
+}
+
+
+
+
+
+
+
+#previewContent {
+    margin: 0;
+    padding: 10px;
+    overflow-x: auto;
+    display: block;
+}
+#previewContent p {
+    line-height: 1.5;       /* Sorok közötti térköz */
+    margin-bottom: 1.5em;   /* Térköz a <p> tag-ek között */
+}
+
+
+
+.custom-block {
+    border: 1px solid #ddd;
+    padding: 10px;
+    position: relative;
+    margin: 10px 0;
+    background-color: #f9f9f9;
+  }
+
+  .edit-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 5px;
+    font-size: 12px;
+  }
+
+
+  .post-image {
+    display: inline-block;
+    position: relative;
+    text-align: center;
+    float: none;
+  }
+
+
+  .table-bordered {
+    border-collapse: collapse; /* A cellák közötti vonalakat összevonja */
+    border-style: solid;
+    border-width: 1px;
+    border-color: red;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border-style: solid;
+    border-width: 1px;
+    border-color: red;
+    padding: 8px; /* Opcionális: cellák közötti térköz */
+}
+
+.gallery-box {
+    margin: 10px 0px 10px 0px;
+    padding: 0;
+    width: 100%;
+    height: auto;
+    display: block;
+    position: relative;
+    background-color: transparent;
+}
+
+#imageListContainer {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    max-height: 100%;
+}
+
+
+.table-of-contents {
+    margin: 0px 10px 60px 0px;
+    padding: 0;
+    text-align: left;
+    clear: both;
+    display: block;
+    position: relative;
+
+}
+
+.table-of-contents li {
+
+    list-style-type: none;
+    position: relative;
+    text-align: left;
+    float: left;
+}
+
+.table-of-contents li::after {
+    margin: 0px 8px 0px 8px;
+    content: "|";
+}
+
+.table-of-contents li:last-of-type::after {
+    content: "";
+    margin: 0;
+}
+
+.table-of-contents a {
+    color: blue;
+}
+
+
+
+
+/**
+ * uppy.js feltöltő és fájlfeltöltés formázása
+ */
+ .uppy-Dashboard-inner {
+    height: 100% !important;
+    min-height: unset !important;
+    max-height: 100vh;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+
+.uppy-Dashboard-innerWrap {
+    width: 100% !important;
+    max-width: 100vw !important;
+}
+
+.uppy-Dashboard-inner {
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+#uppy-dashboard {
+    overflow: hidden !important;
+}

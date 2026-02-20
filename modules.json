@@ -1,0 +1,30 @@
+{
+    "require": {
+        "istvan/teszt-module": "@dev",
+        "istvan/teszt-module-2": "@dev",
+        "istvan/focus-cms-core-shortcodes": "@dev"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Projects/teszt-module",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../Projects/teszt-module-2",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../Projects/focus-cms-core-shortcodes",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
+}

@@ -1,0 +1,48 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "npm run build:app",
+        "build:all": "BUILD_TARGET=all vite build && node postbuild.mjs",
+        "build:app": "BUILD_TARGET=app vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@prettier/plugin-php": "^0.22.4",
+        "@tailwindcss/forms": "^0.5.2",
+        "@vitejs/plugin-vue": "^5.2.4",
+        "alpinejs": "^3.14.8",
+        "autoprefixer": "^10.4.2",
+        "axios": "^1.7.4",
+        "concurrently": "^9.0.1",
+        "cross-env": "^7.0.3",
+        "fs": "^0.0.1-security",
+        "glob": "^11.0.1",
+        "laravel-vite-plugin": "^1.2.0",
+        "photoswipe": "^5.4.4",
+        "postcss": "^8.4.31",
+        "postcss-nesting": "^13.0.2",
+        "tailwindcss": "^3.4.17",
+        "vite": "^6.3.2",
+        "vite-plugin-static-copy": "^3.1.6"
+    },
+    "dependencies": {
+        "@mdi/font": "^7.4.47",
+        "@mdi/light-font": "^0.2.63",
+        "@tailwindcss/vite": "^4.1.8",
+        "@uppy/core": "^4.4.2",
+        "@uppy/dashboard": "^4.3.1",
+        "@uppy/image-editor": "^3.3.1",
+        "@uppy/xhr-upload": "^4.3.2",
+        "babel-plugin-prismjs": "^2.1.0",
+        "boxicons": "^2.1.4",
+        "fs-extra": "^11.3.0",
+        "globby": "^14.1.0",
+        "highlight.js": "^11.11.1",
+        "jquery": "^3.6.0",
+        "jquery-slim": "^3.0.0",
+        "js-cookie": "^3.0.5",
+        "prismjs": "^1.30.0",
+        "tailwind-highlightjs": "^2.0.1"
+    }
+}
