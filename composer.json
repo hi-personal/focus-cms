@@ -17,8 +17,6 @@
         "embed/embed": "^4.4",
         "erusev/parsedown-extra": "^0.8.1",
         "intervention/image": "^3.11",
-        "focus-cms/composer-focus-module-installer": "*",
-        "focus-cms/composer-focus-theme-installer": "*",
         "jenssegers/agent": "^2.6",
         "kitloong/laravel-migrations-generator": "^7.0",
         "laravel/framework": "^12.0",
