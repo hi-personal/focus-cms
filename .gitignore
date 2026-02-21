@@ -120,4 +120,4 @@ Homestead.yaml
 # Breeze local repository config
 ###############################################################################
 
-breeze/composer.repositories.json
+composer.repositories.json
