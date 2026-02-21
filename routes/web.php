@@ -119,5 +119,15 @@ Route::get('/categories/{category}', [FrontCategoryController::class, 'show'])->
 Route::get('/tags', [FrontTagController::class, 'index'])->name('front.tags');
 Route::get('/tag/{tag}', [FrontTagController::class, 'show'])->name('front.tag');
 
-//Route::get('/{slug}', [FrontPostController::class, 'show'])->name('post.show');
+
+
+foreach (glob(base_path('Modules/*/routes/web.php')) as $routeFile) {
+    require $routeFile;
+}
+
+foreach (glob(base_path('Themes/*/routes/web.php')) as $routeFile) {
+    require $routeFile;
+}
+
+
 Route::get('/{slug}', [FrontPostController::class, 'show'])->name('post.show');
