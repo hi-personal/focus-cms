@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('file_extension', 100)->nullable();
             $table->string('mime_type', 100)->nullable();
             $table->bigInteger('file_size');
+            $table->unsignedInteger('width')->nullable();
+            $table->unsignedInteger('height')->nullable();
 
             $table->index('mime_type');
             $table->index('file_size');

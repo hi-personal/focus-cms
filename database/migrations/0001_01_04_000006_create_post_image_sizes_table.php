@@ -4,30 +4,44 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
-        // post_images táblához width és height mezők
-        Schema::table('post_images', function (Blueprint $table) {
-            $table->unsignedInteger('width')->nullable()->after('file_size');
-            $table->unsignedInteger('height')->nullable()->after('width');
-        });
+        Schema::create('post_image_sizes', function (Blueprint $table) {
 
-        // post_image_sizes táblához width és height mezők
-        Schema::table('post_image_sizes', function (Blueprint $table) {
-            $table->unsignedInteger('width')->nullable()->after('file_size');
-            $table->unsignedInteger('height')->nullable()->after('width');
+            // id (AUTO_INCREMENT PRIMARY KEY)
+            $table->id();
+
+            // foreign key
+            $table->unsignedBigInteger('post_image_id');
+
+            // mezők
+            $table->string('name');
+            $table->string('file_uri')->unique();
+            $table->string('file_url')->unique();
+
+            $table->string('mime_type', 100)->nullable();
+            $table->unsignedBigInteger('file_size');
+
+            $table->unsignedInteger('width')->nullable();
+            $table->unsignedInteger('height')->nullable();
+
+            // indexek
+            $table->index('mime_type');
+            $table->index('file_size');
+
+            // foreign key constraint
+            $table->foreign('post_image_id')
+                ->references('id')
+                ->on('post_images')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
         });
     }
 
     public function down(): void
     {
-        Schema::table('post_images', function (Blueprint $table) {
-            $table->dropColumn(['width', 'height']);
-        });
-
-        Schema::table('post_image_sizes', function (Blueprint $table) {
-            $table->dropColumn(['width', 'height']);
-        });
+        Schema::dropIfExists('post_image_sizes');
     }
 };
