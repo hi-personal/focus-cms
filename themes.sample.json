@@ -1,14 +1,5 @@
 {
     "require": {
-        "istvan/focus-default-theme": "@dev"
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:istvan1243/focus-cms-default-theme.git",
-            "options": {
-                "symlink": false
-            }
-        }
-    ]
+        "focus-cms/focus-default-theme": "@dev"
+    }
 }
