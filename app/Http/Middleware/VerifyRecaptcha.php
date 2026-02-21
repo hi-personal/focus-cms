@@ -11,32 +11,44 @@ class VerifyRecaptcha
 {
     public function handle(Request $request, Closure $next): Response
     {
-        //return $next($request);
-        // Ha nincs engedélyezve vagy teszt környezetben vagyunk
         if (!$this->shouldVerifyRecaptcha()) {
             return $next($request);
         }
 
-        // if (!$request->is('login') || $request->filled('password') && $request->input('password') === 'hidden') {
-        //     return $next($request);
-        // }
-
-
         $token = $request->input('recaptcha_token');
 
-        // Token ellenőrzése
-        if (empty($token)) {
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY PATCH: explicit empty + type validation
+        |--------------------------------------------------------------------------
+        */
+        if (!is_string($token) || trim($token) === '') {
             return $this->failedResponse('Hiányzó reCAPTCHA token');
         }
 
-        $response = Http::asForm()->timeout(5)->retry(2, 100)->post(
-            'https://www.google.com/recaptcha/api/siteverify',
-            [
-                'secret' => config('recaptcha.secret_key'),
-                'response' => $token,
-                'remoteip' => $request->ip()
-            ]
-        );
+        try {
+
+            $response = Http::asForm()
+                ->timeout(5)
+                ->retry(2, 100)
+                ->post(
+                    'https://www.google.com/recaptcha/api/siteverify',
+                    [
+                        'secret'   => config('recaptcha.secret_key'),
+                        'response' => $token,
+                        'remoteip' => $request->ip()
+                    ]
+                );
+
+        } catch (\Throwable $e) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | SECURITY PATCH: prevent exception bypass
+            |--------------------------------------------------------------------------
+            */
+            return $this->failedResponse('Captcha ellenőrzési hiba');
+        }
 
         if (!$response->successful()) {
             return $this->failedResponse('A reCAPTCHA szolgáltatás nem elérhető');
@@ -44,7 +56,17 @@ class VerifyRecaptcha
 
         $data = $response->json();
 
-        if (!$data['success'] || $data['score'] < config('recaptcha.threshold')) {
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY PATCH: strict validation
+        |--------------------------------------------------------------------------
+        */
+        if (
+            empty($data)
+            || empty($data['success'])
+            || !isset($data['score'])
+            || $data['score'] < config('recaptcha.threshold')
+        ) {
             return $this->failedResponse('A reCAPTCHA ellenőrzés sikertelen');
         }
 
@@ -53,13 +75,11 @@ class VerifyRecaptcha
 
     protected function shouldVerifyRecaptcha(): bool
     {
-        // Ha nincs engedélyezve a konfigban
         if (!config('recaptcha.enabled')) {
             return false;
         }
 
-        // Ha a környezet benne van a kihagyandó listában
-        if (in_array(config('app.env'), config('recaptcha.skip_env'))) {
+        if (in_array(config('app.env'), config('recaptcha.skip_env'), true)) {
             return false;
         }
 
@@ -69,13 +89,18 @@ class VerifyRecaptcha
     protected function failedResponse(string $message)
     {
         if (request()->expectsJson()) {
-            return response()->json([
-                'message' => $message,
-                'errors' => ['recaptcha' => [$message]]
-            ], 422);
+
+            return response()->json(
+                [
+                    'message' => $message,
+                    'errors'  => ['recaptcha' => [$message]]
+                ],
+                422
+            );
         }
 
-        return redirect()->back()
+        return redirect()
+            ->back()
             ->withInput()
             ->withErrors(['recaptcha' => $message]);
     }

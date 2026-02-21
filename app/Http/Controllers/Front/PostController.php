@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use App\Models\Option;
 use App\Models\Post;
-use Illuminate\Http\RedirectResponse;
-
 use App\Models\PostMeta;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PostController extends Controller
@@ -24,22 +21,34 @@ class PostController extends Controller
 
     public function home(): View
     {
-        $page = Post::find($this->homePageId);
+        $page = Post::findOrFail($this->homePageId);
+
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY PATCH: prevent access to unpublished homepage
+        |--------------------------------------------------------------------------
+        */
+        if (
+            auth()->check() === false
+            && in_array($page->post_type_name, ['post', 'page'])
+            && $page->status !== 'published'
+        ) {
+            abort(404);
+        }
+
         $rawContent = $page->content;
         $page->content = markdownToHtml($rawContent);
 
         $features = $this->detectContentFeatures($rawContent);
 
-        $meta_title = PostMeta::where('post_id', $page->id)->where('name', 'meta_title')->first()?->value;
-        $meta_description = PostMeta::where('post_id', $page->id)->where('name', 'meta_description')->first()?->value;
+        $meta_title = PostMeta::where('post_id', $page->id)->where('name', 'meta_title')->value('value');
+        $meta_description = PostMeta::where('post_id', $page->id)->where('name', 'meta_description')->value('value');
+
         $isHome = $this->homePageId == $page->id;
 
-        $headImageUrl = PostMeta::where('post_id', $page->id)
-            ->where('name', 'head_image_url')
-            ?->value('value')
-            ?? PostMeta::where('post_id', $this->homePageId)
-                ->where('name', 'head_image_url')
-                ?->value('value');
+        $headImageUrl =
+            PostMeta::where('post_id', $page->id)->where('name', 'head_image_url')->value('value')
+            ?? PostMeta::where('post_id', $this->homePageId)->where('name', 'head_image_url')->value('value');
 
         $category = $page->terms->where('post_taxonomy_name', 'categories')->first();
         $tags = $page->terms->where('post_taxonomy_name', 'tags');
@@ -61,21 +70,33 @@ class PostController extends Controller
     public function show($slug)
     {
         $post = Post::where('name', $slug)->firstOrFail();
+
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY PATCH: access validation BEFORE loading content
+        |--------------------------------------------------------------------------
+        */
+        if (
+            auth()->check() === false
+            && in_array($post->post_type_name, ['post', 'page'])
+            && $post->status !== 'published'
+        ) {
+            abort(404);
+        }
+
         $rawContent = $post->content;
         $post->content = markdownToHtml($rawContent);
 
         $features = $this->detectContentFeatures($rawContent);
 
-        $meta_title = PostMeta::where('post_id', $post->id)->where('name', 'meta_title')->first()?->value;
-        $meta_description = PostMeta::where('post_id', $post->id)->where('name', 'meta_description')->first()?->value;
+        $meta_title = PostMeta::where('post_id', $post->id)->where('name', 'meta_title')->value('value');
+        $meta_description = PostMeta::where('post_id', $post->id)->where('name', 'meta_description')->value('value');
+
         $isHome = $this->homePageId == $post->id;
 
-        $headImageUrl = PostMeta::where('post_id', $post->id)
-            ->where('name', 'head_image_url')
-            ->value('value')
-            ?? PostMeta::where('post_id', $this->homePageId)
-                ->where('name', 'head_image_url')
-                ->value('value');
+        $headImageUrl =
+            PostMeta::where('post_id', $post->id)->where('name', 'head_image_url')->value('value')
+            ?? PostMeta::where('post_id', $this->homePageId)->where('name', 'head_image_url')->value('value');
 
         $category = $post->terms->where('post_taxonomy_name', 'categories')->first();
         $tags = $post->terms->where('post_taxonomy_name', 'tags');
@@ -86,18 +107,10 @@ class PostController extends Controller
         $prevPostInTerm = empty($category) ? null : $category->prevPostInTerm($post, $category);
         $nextPostInTerm = empty($category) ? null : $category->nextPostInTerm($post, $category);
 
-        $viewName = match($post->post_type_name) {
-            'post'  =>  'theme::post',
+        $viewName = match ($post->post_type_name) {
+            'post'  => 'theme::post',
             default => 'theme::page'
         };
-
-        if (
-            auth()->check() === false
-            && in_array($post->post_type_name, ['post', 'page'])
-            && $post->status != 'published'
-        ) {
-            return redirect('/');
-        }
 
         return view($viewName, [
             'post'             => $post,
@@ -129,22 +142,18 @@ class PostController extends Controller
         }
 
         return [
-            // univerzális kód detektálás
             'code' =>
                 str_contains($content, '```')
                 || preg_match('/\{\{code(?::[a-z0-9_-]+)?\}\}/i', $content)
                 || str_contains($content, '<pre')
                 || str_contains($content, '<code'),
 
-            // képek
             'image' =>
                 preg_match('/\[image\s+id\(/i', $content),
 
-            // galéria
             'gallery' =>
                 preg_match('/\[gallery\s+ids\(/i', $content),
 
-            // fájl
             'file' =>
                 preg_match('/\[file\s+id\(/i', $content),
         ];

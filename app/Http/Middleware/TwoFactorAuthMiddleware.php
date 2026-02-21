@@ -12,8 +12,6 @@ class TwoFactorAuthMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        //return $next($request);
-
         $user = Auth::user();
 
         if (!$user) {

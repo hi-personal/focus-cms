@@ -9,54 +9,59 @@ use Illuminate\Support\Facades\Http;
 
 class VerifyCloudfareTurnstile
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        //return $next($request);
-
         if (!$this->shouldVerifyTurnstile()) {
             return $next($request);
         }
 
         if (!$this->validateTurnstile($request)) {
-            return back()->withErrors(['captcha' => 'Captcha validáció sikertelen']);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['captcha' => 'Captcha validáció sikertelen']);
         }
 
         return $next($request);
     }
 
-    function validateTurnstile($request)
+    protected function validateTurnstile(Request $request): bool
     {
-        $response = Http::asForm()
-            ->timeout(5)
-            ->retry(3, 1000)
-            ->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
-                'secret' => config('cloudflare.secret_key'),
-                'response' => $request->input('cf-turnstile-response'),
-                'remoteip' => $request->ip()
-            ]
-        );
+        try {
 
-        return $response->json()['success'] ?? false;
+            $response = Http::asForm()
+                ->timeout(5)
+                ->retry(3, 1000)
+                ->post(
+                    'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                    [
+                        'secret'   => config('cloudflare.secret_key'),
+                        'response' => $request->input('cf-turnstile-response'),
+                        'remoteip' => $request->ip()
+                    ]
+                );
+
+        } catch (\Throwable $e) {
+
+            return false;
+        }
+
+        $data = $response->json();
+
+        return !empty($data['success']);
     }
 
     protected function shouldVerifyTurnstile(): bool
     {
-        // Ha nincs engedélyezve a konfigban
         if (!config('cloudflare.enabled')) {
             return false;
         }
 
-        // Ha a környezet benne van a kihagyandó listában
-        if (in_array(config('app.env'), config('cloudflare.skip_env'))) {
+        if (in_array(config('app.env'), config('cloudflare.skip_env'), true)) {
             return false;
         }
 
         return true;
     }
 }
-

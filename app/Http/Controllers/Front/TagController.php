@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Option;
-use App\Models\Post;
 use App\Models\PostTerm;
 use App\Models\PostTermMeta;
-use App\Models\PostTermRelationship;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -22,25 +20,33 @@ class TagController extends Controller
 
     public function index(Request $request): View
     {
-        $categories = PostTerm::where('post_taxonomy_name', 'categories')->get();
+        $tags = PostTerm::where('post_taxonomy_name', 'tags')->get();
 
-        return view("theme::categories", [
-            'categories'   => $categories,
+        return view("theme::tags", [
+            'tags'         => $tags,
             'currentTheme' => $this->currentThemeName
         ]);
     }
 
     public function show(Request $request, $tag): View
     {
-        $tagName = $tag;
-        $tag = PostTerm::where('post_taxonomy_name', 'tags')->where('name', $tagName)->first();
-        $description = PostTermMeta::where('post_term_id', $tag->id)->where('name', 'description')->first()?->value;
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY PATCH: prevent null access leak
+        |--------------------------------------------------------------------------
+        */
+        $tag = PostTerm::where('post_taxonomy_name', 'tags')
+            ->where('name', $tag)
+            ->firstOrFail();
+
+        $description = PostTermMeta::where('post_term_id', $tag->id)
+            ->where('name', 'description')
+            ->value('value');
 
         return view("theme::tag", [
-            'tag'     => $tag,
-            'description' => $description,
+            'tag'          => $tag,
+            'description'  => $description,
             'currentTheme' => $this->currentThemeName
         ]);
-
     }
 }

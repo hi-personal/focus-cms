@@ -20,15 +20,10 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 
-
 class AuthenticatedSessionController extends Controller
 {
     use Auth2FaTrait;
 
-
-    /**
-     * Display the login view.
-     */
     public function create(): View
     {
         return view('auth.login');
@@ -43,6 +38,7 @@ class AuthenticatedSessionController extends Controller
             $auth2FaMode = UserMeta::find($user->id, 'auth_2fa_mode')->value;
 
             if($request->password == "hidden") {
+
                 if($auth2FaMode == "email") {
                     $this->sendTokenMail($user);
                 }
@@ -56,9 +52,6 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
         }
-
-        //     $request->authenticate();
-
 
         if (RateLimiter::tooManyAttempts($this->throttleKey($request), 5)) {
             $seconds = RateLimiter::availableIn($this->throttleKey($request));
@@ -143,10 +136,6 @@ class AuthenticatedSessionController extends Controller
         return Str::lower($request->input('email')).'|'.$request->ip();
     }
 
-
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         $userSession = UserSession::find(
