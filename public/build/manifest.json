@@ -1,44 +1,7 @@
 {
-  "Modules/SampleModule/resources/css/module.css": {
-    "file": "css/module-D5yaabX3.css",
-    "src": "Modules/SampleModule/resources/css/module.css",
-    "isEntry": true
-  },
-  "Modules/SampleModule/resources/js/module.js": {
-    "file": "assets/module-Cu7UItrN.js",
-    "name": "module",
-    "src": "Modules/SampleModule/resources/js/module.js",
-    "isEntry": true
-  },
-  "Themes/FocusDefaultTheme/resources/css/theme.css": {
-    "file": "css/theme-CF3hH2kL.css",
-    "src": "Themes/FocusDefaultTheme/resources/css/theme.css",
-    "isEntry": true
-  },
-  "Themes/FocusDefaultTheme/resources/js/theme.js": {
-    "file": "assets/theme-DtSV4p-a.js",
-    "name": "theme",
-    "src": "Themes/FocusDefaultTheme/resources/js/theme.js",
-    "isEntry": true,
-    "imports": [
-      "_boxicons-CXH_nB3v.js",
-      "_jquery-uoon-iQo.js"
-    ]
-  },
-  "_boxicons-CXH_nB3v.js": {
-    "file": "assets/boxicons-CXH_nB3v.js",
-    "name": "boxicons"
-  },
-  "_image-picker-BNqc1Sk_.js": {
-    "file": "assets/image-picker-BNqc1Sk_.js",
-    "name": "image-picker",
-    "imports": [
-      "_jquery-uoon-iQo.js"
-    ]
-  },
-  "_jquery-uoon-iQo.js": {
-    "file": "assets/jquery-uoon-iQo.js",
-    "name": "jquery"
+  "_image-picker-4kGPHuIV.js": {
+    "file": "assets/image-picker-4kGPHuIV.js",
+    "name": "image-picker"
   },
   "node_modules/@mdi/font/fonts/materialdesignicons-webfont.eot": {
     "file": "assets/materialdesignicons-webfont-CSr8KVlo.eot",
@@ -57,7 +20,7 @@
     "src": "node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2"
   },
   "resources/css/app.css": {
-    "file": "css/app-DREM91Tv.css",
+    "file": "css/app-COWxN3Tf.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -67,15 +30,13 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-Bfvl6EaV.js",
+    "file": "assets/app-BgRO-ts3.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_boxicons-CXH_nB3v.js",
-      "_jquery-uoon-iQo.js",
-      "resources/js/preview-post-content.js",
-      "_image-picker-BNqc1Sk_.js"
+      "_image-picker-4kGPHuIV.js",
+      "resources/js/preview-post-content.js"
     ]
   },
   "resources/js/preview-post-content.js": {
@@ -85,13 +46,12 @@
     "isEntry": true
   },
   "resources/js/uppy.js": {
-    "file": "assets/uppy-Dkpec83N.js",
+    "file": "assets/uppy-Vcj6Bl5N.js",
     "name": "uppy",
     "src": "resources/js/uppy.js",
     "isEntry": true,
     "imports": [
-      "_jquery-uoon-iQo.js",
-      "_image-picker-BNqc1Sk_.js"
+      "_image-picker-4kGPHuIV.js"
     ]
   }
 }

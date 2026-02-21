@@ -2,9 +2,21 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "npm run build:app",
-        "build:all": "BUILD_TARGET=all vite build && node postbuild.mjs",
-        "build:app": "BUILD_TARGET=app vite build",
+
+        "build": "node build-help.mjs",
+
+        "build:app":
+            "cross-env BUILD_TARGET=app vite build",
+
+        "build:theme":
+            "cross-env BUILD_TARGET=theme sh -c 'vite build && node postbuild.mjs'",
+
+        "build:modules":
+            "cross-env BUILD_TARGET=modules sh -c 'vite build && node postbuild.mjs'",
+
+        "build:all":
+            "cross-env BUILD_TARGET=all vite build && cross-env BUILD_TARGET=all node postbuild.mjs",
+
         "dev": "vite"
     },
     "devDependencies": {

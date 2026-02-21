@@ -1,5 +1,13 @@
 /**
  * Focus CMS - vite.config.js
+ *
+ * Fully isolated build system:
+ *
+ * app      → public/build
+ * theme    → public/build-tmp
+ * modules  → public/build-tmp
+ *
+ * postbuild.mjs copies from build-tmp → final destinations
  */
 
 import { defineConfig } from 'vite';
@@ -8,115 +16,213 @@ import path from 'path';
 import fs from 'fs';
 
 /**
+ * BUILD TARGET
+ */
+
+const BUILD_TARGET =
+    process.env.BUILD_TARGET || 'app';
+
+/**
  * Aktív téma neve
  */
-function getCurrentThemeName() {
-  try {
-    const currentTheme = JSON.parse(
-      fs.readFileSync('currentTheme.json', 'utf8')
-    );
-    return currentTheme.theme;
-  } catch {
-    return 'default';
-  }
+
+function getCurrentThemeName()
+{
+    try
+    {
+        const currentTheme =
+            JSON.parse(
+                fs.readFileSync(
+                    'currentTheme.json',
+                    'utf8'
+                )
+            );
+
+        return currentTheme.theme;
+    }
+    catch
+    {
+        return 'default';
+    }
 }
 
 const themeName = getCurrentThemeName();
+
+console.log('\n🎯 BUILD_TARGET:', BUILD_TARGET);
 console.log('🎨 Active theme:', themeName);
 
-export default defineConfig(() => {
+/**
+ * Build output directory
+ *
+ * CRITICAL:
+ * Only app builds go to public/build
+ *
+ * theme/modules build to public/build-tmp
+ */
 
-  return {
+function getOutDir()
+{
+    if (BUILD_TARGET === 'app')
+    {
+        return 'public/build';
+    }
+
+    return 'public/build-tmp';
+}
+
+/**
+ * Vite config
+ */
+
+export default defineConfig({
+
     resolve: {
-      preserveSymlinks: true,
-      alias: {
-        '@': path.resolve(__dirname, 'resources/js'),
-        '@css': path.resolve(__dirname, 'resources/css'),
-        '@theme': path.resolve(__dirname, `Themes/${themeName}`),
-        '@node': path.resolve(__dirname, 'node_modules'),
-      },
+        preserveSymlinks: true,
+
+        alias: {
+            '@': path.resolve(__dirname, 'resources/js'),
+            '@css': path.resolve(__dirname, 'resources/css'),
+            '@theme': path.resolve(
+                __dirname,
+                `Themes/${themeName}`
+            ),
+            '@node': path.resolve(
+                __dirname,
+                'node_modules'
+            ),
+        },
     },
 
     plugins: [
-      laravel({
-        input: getViteInputs(themeName),
-        refresh: true,
-      }),
+
+        laravel({
+
+            input:
+                getViteInputs(themeName),
+
+            refresh: true,
+
+        }),
+
     ],
 
     server: {
-      host: '0.0.0.0',
-      port: 5173,
-      strictPort: true,
-      cors: true,
-      hmr: {
-        host: '10.0.0.1',
+
+        host: '0.0.0.0',
+
         port: 5173,
-      },
+
+        strictPort: true,
+
+        cors: true,
+
+        hmr: {
+
+            host: '10.0.0.1',
+
+            port: 5173,
+
+        },
+
     },
 
     build: {
-      outDir: 'public/build',
-      emptyOutDir: true,
 
-      /**
-       * 🔑 KRITIKUS:
-       * Laravel @vite CSAK ezt fogadja el
-       */
-      manifest: 'manifest.json',
+        /**
+         * ISOLATED OUTPUT DIR
+         */
 
-      rollupOptions: {
-        output: {
-          entryFileNames: 'assets/[name]-[hash].js',
-          chunkFileNames: 'assets/[name]-[hash].js',
+        outDir:
+            getOutDir(),
 
-          assetFileNames: assetInfo => {
-            if (assetInfo.name?.endsWith('.css')) {
-              return 'css/[name]-[hash][extname]';
-            }
-            return 'assets/[name]-[hash][extname]';
-          },
+        emptyOutDir: true,
+
+        /**
+         * Manifest always generated
+         */
+
+        manifest: 'manifest.json',
+
+        /**
+         * Consistent structure
+         */
+
+        rollupOptions: {
+
+            output: {
+
+                entryFileNames:
+                    'assets/[name]-[hash].js',
+
+                chunkFileNames:
+                    'assets/[name]-[hash].js',
+
+                assetFileNames:
+                    assetInfo =>
+                {
+                    if (
+                        assetInfo.name?.endsWith('.css')
+                    )
+                    {
+                        return 'css/[name]-[hash][extname]';
+                    }
+
+                    return 'assets/[name]-[hash][extname]';
+                },
+
+            },
+
         },
-      },
+
     },
-  };
+
 });
 
 /**
- * Vite entrypointok (admin + frontend + theme)
+ * Entry discovery
  */
-function getViteInputs(themeName) {
 
-    const buildTarget =
-        process.env.BUILD_TARGET || 'all';
-
+function getViteInputs(themeName)
+{
     const inputs = [];
 
     /*
-     |--------------------------------------------------------------------------
-     | App
-     |--------------------------------------------------------------------------
-     */
+    |--------------------------------------------------------------------------
+    | APP
+    |--------------------------------------------------------------------------
+    */
 
-    if (buildTarget === 'all' || buildTarget === 'app') {
-
+    if (
+        BUILD_TARGET === 'app'
+        || BUILD_TARGET === 'all'
+    )
+    {
         inputs.push(
+
             'resources/css/app.css',
+
             'resources/css/style.css',
+
             'resources/js/app.js',
+
             'resources/js/preview-post-content.js',
-            'resources/js/uppy.js'
+
+            'resources/js/uppy.js',
+
         );
     }
 
     /*
-     |--------------------------------------------------------------------------
-     | Theme
-     |--------------------------------------------------------------------------
-     */
+    |--------------------------------------------------------------------------
+    | THEME
+    |--------------------------------------------------------------------------
+    */
 
-    if (buildTarget === 'all') {
-
+    if (
+        BUILD_TARGET === 'theme'
+        || BUILD_TARGET === 'all'
+    )
+    {
         const themeCss =
             `Themes/${themeName}/resources/css/theme.css`;
 
@@ -131,41 +237,52 @@ function getViteInputs(themeName) {
     }
 
     /*
-     |--------------------------------------------------------------------------
-     | Modules (AUTO DISCOVERY)
-     |--------------------------------------------------------------------------
-     */
+    |--------------------------------------------------------------------------
+    | MODULES
+    |--------------------------------------------------------------------------
+    */
 
-    const modulesDir =
-        path.resolve('Modules');
+    if (
+        BUILD_TARGET === 'modules'
+        || BUILD_TARGET === 'all'
+    )
+    {
+        const modulesDir =
+            path.resolve('Modules');
 
-    if (fs.existsSync(modulesDir)) {
+        if (fs.existsSync(modulesDir))
+        {
+            const modules =
+                fs.readdirSync(modulesDir)
+                    .filter(name =>
+                        fs.statSync(
+                            path.join(
+                                modulesDir,
+                                name
+                            )
+                        ).isDirectory()
+                    );
 
-        const modules =
-            fs.readdirSync(modulesDir)
-                .filter(name =>
-                    fs.statSync(
-                        path.join(modulesDir, name)
-                    ).isDirectory()
-                );
+            for (const moduleName of modules)
+            {
+                const css =
+                    `Modules/${moduleName}/resources/css/module.css`;
 
-        for (const moduleName of modules) {
+                const js =
+                    `Modules/${moduleName}/resources/js/module.js`;
 
-            const css =
-                `Modules/${moduleName}/resources/css/module.css`;
+                if (fs.existsSync(css))
+                    inputs.push(css);
 
-            const js =
-                `Modules/${moduleName}/resources/js/module.js`;
-
-            if (fs.existsSync(css))
-                inputs.push(css);
-
-            if (fs.existsSync(js))
-                inputs.push(js);
+                if (fs.existsSync(js))
+                    inputs.push(js);
+            }
         }
     }
 
-    console.log('\n📦 Vite inputs:\n', inputs, '\n');
+    console.log('\n📦 Vite inputs:\n');
+    console.log(inputs);
+    console.log('');
 
     return inputs;
 }

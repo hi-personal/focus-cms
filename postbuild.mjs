@@ -2,326 +2,305 @@
  * Focus CMS - postbuild.mjs
  *
  * Handles isolated build output for:
- * - Core app (already handled by Vite)
- * - Active Theme
- * - All Modules (auto-discovery)
+ *
+ * source:
+ *   public/build-tmp/
+ *
+ * targets:
+ *   public/themepublic/build/
+ *   Modules/<Module>/public/build/
+ *
+ * Never touches public/build
  */
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const BUILD_TARGET =
+    process.env.BUILD_TARGET || 'all';
+
+const BUILD_TMP_DIR =
+    path.resolve('public/build-tmp');
+
 
 /**
- * Resolve manifest path robustly
+ * Ensure directory exists
  */
-function resolveManifestPath(buildDir) {
-
-    const candidates = [
-        path.join(buildDir, 'manifest.json'),
-        path.join(buildDir, '.vite', 'manifest.json'),
-    ];
-
-    for (const p of candidates) {
-        if (fs.existsSync(p)) return p;
-    }
-
-    throw new Error('Vite manifest.json not found in public/build');
+function ensureDir(dir)
+{
+    fs.mkdirSync(dir, { recursive: true });
 }
 
+
 /**
- * Collect all related manifest entries recursively
+ * Read manifest
  */
-function collectAllRelatedAssets(manifest, entryKey) {
+function readManifest()
+{
+    const manifestPath =
+        path.join(BUILD_TMP_DIR, 'manifest.json');
+
+    if (!fs.existsSync(manifestPath))
+    {
+        throw new Error(
+            'manifest.json not found in build-tmp'
+        );
+    }
+
+    return JSON.parse(
+        fs.readFileSync(manifestPath, 'utf8')
+    );
+}
+
+
+/**
+ * Copy file safely
+ */
+function copyFileSafe(src, dest)
+{
+    ensureDir(path.dirname(dest));
+
+    fs.copyFileSync(src, dest);
+
+    console.log('📄 Copied:', dest);
+}
+
+
+/**
+ * Copy manifest entry recursively
+ */
+function copyManifestEntry(manifest, entryKey, targetRoot)
+{
+    if (!manifest[entryKey])
+        return;
 
     const visited = new Set();
-    const queue = [entryKey];
 
-    while (queue.length) {
+    function walk(key)
+    {
+        if (!manifest[key]) return;
 
-        const key = queue.pop();
-
-        if (visited.has(key)) continue;
-        if (!manifest[key]) continue;
+        if (visited.has(key)) return;
 
         visited.add(key);
 
-        for (const importKey of manifest[key].imports || []) {
-            queue.push(importKey);
+        const chunk = manifest[key];
+
+        if (chunk.file)
+        {
+            copyFileSafe(
+                path.join(BUILD_TMP_DIR, chunk.file),
+                path.join(targetRoot, chunk.file)
+            );
+        }
+
+        if (chunk.css)
+        {
+            for (const css of chunk.css)
+            {
+                copyFileSafe(
+                    path.join(BUILD_TMP_DIR, css),
+                    path.join(targetRoot, css)
+                );
+            }
+        }
+
+        if (chunk.imports)
+        {
+            for (const imp of chunk.imports)
+            {
+                walk(imp);
+            }
         }
     }
 
-    return [...visited];
+    walk(entryKey);
 }
 
+
 /**
- * Copy manifest-related assets
+ * Process Theme
  */
-function copyManifestAssets({
-    manifest,
-    entryKey,
-    buildDir,
-    targetDir,
-    type
-}) {
-
-    if (!manifest[entryKey]) return;
-
-    const relatedKeys =
-        collectAllRelatedAssets(manifest, entryKey);
-
-    for (const key of relatedKeys) {
-
-        const file = manifest[key]?.file;
-
-        if (!file) continue;
-
-        const src = path.join(buildDir, file);
-
-        if (!fs.existsSync(src)) continue;
-
-        const dest = path.join(
-            targetDir,
-            type,
-            path.basename(file)
+function processTheme(manifest)
+{
+    const themeConfig =
+        JSON.parse(
+            fs.readFileSync(
+                'currentTheme.json',
+                'utf8'
+            )
         );
 
-        fs.copyFileSync(src, dest);
+    const themeName =
+        themeConfig.theme;
 
-        console.log(`📄 Copied: ${dest}`);
-    }
-}
+    console.log(
+        '\n🎨 Processing theme:',
+        themeName
+    );
 
-/**
- * Copy static assets from vite.assets.js
- */
-async function copyStaticAssets(configPath, targetDir) {
+    const targetDir =
+        path.resolve(
+            'public/themepublic/build'
+        );
 
-    if (!fs.existsSync(configPath)) return;
-
-    const config =
-        await import(`file://${path.resolve(configPath)}`);
-
-    const assets =
-        config.themeAssets ||
-        config.moduleAssets ||
-        [];
-
-    for (const asset of assets) {
-
-        const srcDir = path.resolve(asset.src);
-
-        if (!fs.existsSync(srcDir)) continue;
-
-        const destDir =
-            path.join(targetDir, asset.dest);
-
-        fs.mkdirSync(destDir, { recursive: true });
-
-        for (const file of fs.readdirSync(srcDir)) {
-
-            const srcFile = path.join(srcDir, file);
-
-            if (!fs.statSync(srcFile).isFile()) continue;
-
-            const destFile =
-                path.join(destDir, file);
-
-            fs.copyFileSync(srcFile, destFile);
-
-            console.log(`📁 Asset copied: ${destFile}`);
-        }
-    }
-}
-
-/**
- * Process active theme
- */
-async function processTheme(manifest, buildDir) {
-
-    const currentTheme =
-        JSON.parse(fs.readFileSync(
-            'currentTheme.json',
-            'utf8'
-        ));
-
-    const themeName = currentTheme.theme;
-
-    const themeRoot =
-        path.join('Themes', themeName);
-
-    const themeBuildDir =
-        path.join(themeRoot, 'public', 'build');
-
-    console.log(`\n🎨 Processing theme: ${themeName}`);
-
-    fs.rmSync(themeBuildDir, {
+    fs.rmSync(targetDir, {
         recursive: true,
-        force: true
+        force: true,
     });
 
-    fs.mkdirSync(
-        path.join(themeBuildDir, 'css'),
-        { recursive: true }
-    );
-
-    fs.mkdirSync(
-        path.join(themeBuildDir, 'assets'),
-        { recursive: true }
-    );
+    ensureDir(targetDir);
 
     fs.writeFileSync(
-        path.join(themeBuildDir, 'manifest.json'),
+        path.join(targetDir, 'manifest.json'),
         JSON.stringify(manifest, null, 2)
     );
 
-    copyManifestAssets({
+    copyManifestEntry(
         manifest,
-        entryKey:
-            `Themes/${themeName}/resources/css/theme.css`,
-        buildDir,
-        targetDir: themeBuildDir,
-        type: 'css'
-    });
-
-    copyManifestAssets({
-        manifest,
-        entryKey:
-            `Themes/${themeName}/resources/js/theme.js`,
-        buildDir,
-        targetDir: themeBuildDir,
-        type: 'assets'
-    });
-
-    await copyStaticAssets(
-        path.join(themeRoot, 'vite.assets.js'),
-        themeBuildDir
+        `Themes/${themeName}/resources/js/theme.js`,
+        targetDir
     );
 
-    console.log(`✅ Theme ready: ${themeName}`);
+    copyManifestEntry(
+        manifest,
+        `Themes/${themeName}/resources/css/theme.css`,
+        targetDir
+    );
+
+    console.log('✅ Theme ready');
 }
 
+
 /**
- * Process all modules (auto discovery)
+ * Process Modules
  */
-async function processModules(manifest, buildDir) {
+function processModules(manifest)
+{
+    const modulesDir =
+        path.resolve('Modules');
 
-    const modulesRoot = path.resolve('Modules');
-
-    if (!fs.existsSync(modulesRoot)) {
+    if (!fs.existsSync(modulesDir))
+    {
         console.log('\n📦 No modules found');
         return;
     }
 
     const modules =
-        fs.readdirSync(modulesRoot)
+        fs.readdirSync(modulesDir)
             .filter(name =>
                 fs.statSync(
-                    path.join(modulesRoot, name)
+                    path.join(modulesDir, name)
                 ).isDirectory()
             );
 
-    for (const moduleName of modules) {
+    for (const moduleName of modules)
+    {
+        console.log(
+            '\n📦 Processing module:',
+            moduleName
+        );
 
-        console.log(`\n📦 Processing module: ${moduleName}`);
+        /**
+         * 🔑 TARGET DIR (public/modulepublic)
+         */
 
-        const moduleRoot =
-            path.join(modulesRoot, moduleName);
-
-        const moduleBuildDir =
-            path.join(
-                moduleRoot,
-                'public',
-                'build'
+        const targetDir =
+            path.resolve(
+                `public/modulepublic/${moduleName}/build`
             );
 
-        fs.rmSync(moduleBuildDir, {
+        fs.rmSync(targetDir, {
             recursive: true,
-            force: true
+            force: true,
         });
 
-        fs.mkdirSync(
-            path.join(moduleBuildDir, 'css'),
-            { recursive: true }
-        );
+        ensureDir(targetDir);
 
-        fs.mkdirSync(
-            path.join(moduleBuildDir, 'assets'),
-            { recursive: true }
-        );
+        /**
+         * Copy manifest
+         */
 
         fs.writeFileSync(
-            path.join(moduleBuildDir, 'manifest.json'),
+            path.join(targetDir, 'manifest.json'),
             JSON.stringify(manifest, null, 2)
         );
 
-        copyManifestAssets({
-            manifest,
-            entryKey:
-                `Modules/${moduleName}/resources/css/module.css`,
-            buildDir,
-            targetDir: moduleBuildDir,
-            type: 'css'
-        });
+        /**
+         * Copy assets
+         */
 
-        copyManifestAssets({
+        copyManifestEntry(
             manifest,
-            entryKey:
-                `Modules/${moduleName}/resources/js/module.js`,
-            buildDir,
-            targetDir: moduleBuildDir,
-            type: 'assets'
-        });
-
-        await copyStaticAssets(
-            path.join(moduleRoot, 'vite.assets.js'),
-            moduleBuildDir
+            `Modules/${moduleName}/resources/js/module.js`,
+            targetDir
         );
 
-        console.log(`✅ Module ready: ${moduleName}`);
+        copyManifestEntry(
+            manifest,
+            `Modules/${moduleName}/resources/css/module.css`,
+            targetDir
+        );
+
+        console.log('✅ Module ready');
     }
 }
 
+
 /**
- * Main execution
+ * Cleanup
  */
-async function main() {
-
-    try {
-
-        const buildDir =
-            path.resolve('public/build');
-
-        const manifestPath =
-            resolveManifestPath(buildDir);
-
-        const manifest =
-            JSON.parse(
-                fs.readFileSync(
-                    manifestPath,
-                    'utf8'
-                )
-            );
-
-        await processTheme(manifest, buildDir);
-
-        await processModules(manifest, buildDir);
-
-        console.log(
-            '\n🚀 All theme and module assets built successfully\n'
+function cleanup()
+{
+    if (fs.existsSync(BUILD_TMP_DIR))
+    {
+        fs.rmSync(
+            BUILD_TMP_DIR,
+            { recursive: true, force: true }
         );
 
-    } catch (err) {
-
-        console.error(
-            '\n❌ Postbuild failed:',
-            err
-        );
-
-        process.exit(1);
+        console.log('\n🧹 build-tmp removed');
     }
+}
+
+
+/**
+ * Main
+ */
+function main()
+{
+    console.log('\n🚀 Focus CMS postbuild');
+
+    console.log('🎯 BUILD_TARGET:', BUILD_TARGET);
+
+    if (!fs.existsSync(BUILD_TMP_DIR))
+    {
+        console.log('No build-tmp found');
+        return;
+    }
+
+    const manifest =
+        readManifest();
+
+    if (
+        BUILD_TARGET === 'theme'
+        || BUILD_TARGET === 'all'
+    )
+    {
+        processTheme(manifest);
+    }
+
+    if (
+        BUILD_TARGET === 'modules'
+        || BUILD_TARGET === 'all'
+    )
+    {
+        processModules(manifest);
+    }
+
+    cleanup();
+
+    console.log('\n✅ Postbuild finished\n');
 }
 
 main();

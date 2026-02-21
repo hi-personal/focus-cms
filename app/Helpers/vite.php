@@ -1,7 +1,23 @@
 <?php
 
-function check_theme_vite_is_active() {
-    return (app()->environment('local') && Illuminate\Support\Facades\Vite::isRunningHot());
+
+
+use Illuminate\Support\Facades\App;
+
+if (!function_exists('check_module_vite_is_active')) {
+
+    function check_module_vite_is_active(): bool
+    {
+        if (!App::environment('local')) {
+            return false;
+        }
+
+        // Laravel default hot file
+        $hotFile = public_path('hot');
+
+        return file_exists($hotFile);
+    }
+
 }
 
 function theme_vite_assets($themeName) {
