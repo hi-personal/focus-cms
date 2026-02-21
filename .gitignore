@@ -115,3 +115,9 @@ Homestead.json
 Homestead.yaml
 .miracle-sink.history
 .prettierrc
+
+###############################################################################
+# Breeze local repository config
+###############################################################################
+
+breeze/composer.repositories.json
