@@ -18,19 +18,51 @@ class AppServiceProvider extends ServiceProvider
      * Register any application services.
      */
     public function register(): void
-    {
-        /*
-        |--------------------------------------------------------------------------
-        | Core services
-        |--------------------------------------------------------------------------
-        */
+{
+    /*
+    |--------------------------------------------------------------------------
+    | Core services
+    |--------------------------------------------------------------------------
+    */
 
-        $this->app->singleton(CustomMarkdownService::class, function () {
-            return new CustomMarkdownService();
-        });
+    $this->app->singleton(CustomMarkdownService::class, fn () =>
+        new CustomMarkdownService()
+    );
 
-        $this->app->singleton(ShortcodeRegistry::class);
-    }
+    $this->app->singleton(ShortcodeRegistry::class);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Theme és Module providerek késleltetett regisztrálása
+    |--------------------------------------------------------------------------
+    */
+
+    $this->app->booted(function () {
+
+        try {
+
+            if (!$this->app->bound('db')) {
+                return;
+            }
+
+            if (!Schema::hasTable('options')) {
+                return;
+            }
+
+            $this->registerThemeProvider();
+
+            $this->registerModuleProviders();
+
+        } catch (\Throwable $e) {
+
+            // Composer bootstrap alatt vagy DB nincs még kész
+            // Biztonságosan ignoráljuk
+
+        }
+
+    });
+}
 
 
     /**
@@ -38,87 +70,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Options table ellenőrzése
-        |--------------------------------------------------------------------------
-        */
-
-        if (Schema::hasTable('options')) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | THEME ServiceProvider betöltése
-            |--------------------------------------------------------------------------
-            */
-
-            $themeOption = Option::firstWithDefaults('currentThemeName');
-
-            $currentThemeName = $themeOption?->value ?? 'FocusDefaultTheme';
-
-            $themeProviderPath =
-                base_path("Themes/{$currentThemeName}/Providers/ThemeServiceProvider.php");
-
-            $themeProviderClass =
-                "Themes\\{$currentThemeName}\\Providers\\ThemeServiceProvider";
-
-            if (
-                is_string($currentThemeName) &&
-                file_exists($themeProviderPath) &&
-                class_exists($themeProviderClass)
-            ) {
-                $this->app->register($themeProviderClass);
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | MODULE ServiceProviderek betöltése ActiveModules alapján
-            |--------------------------------------------------------------------------
-            */
-
-            $modulesOption = Option::firstWithDefaults('ActiveModules');
-
-            $activeModules = [];
-
-            if (!empty($modulesOption->value)) {
-
-                if (is_array($modulesOption->value)) {
-
-                    $activeModules = $modulesOption->value;
-
-                } elseif (is_object($modulesOption->value)) {
-
-                    $activeModules = (array) $modulesOption->value;
-
-                } elseif (is_string($modulesOption->value)) {
-
-                    $activeModules = [$modulesOption->value];
-                }
-            }
-
-            foreach ($activeModules as $moduleName) {
-
-                if (!is_string($moduleName) || trim($moduleName) === '') {
-                    continue;
-                }
-
-                $providerPath =
-                    base_path("Modules/{$moduleName}/Providers/ModuleServiceProvider.php");
-
-                $providerClass =
-                    "Modules\\{$moduleName}\\Providers\\ModuleServiceProvider";
-
-                if (
-                    file_exists($providerPath) &&
-                    class_exists($providerClass)
-                ) {
-                    $this->app->register($providerClass);
-                }
-            }
-        }
-
-
         /*
         |--------------------------------------------------------------------------
         | Local environment overrides
@@ -156,5 +107,74 @@ class AppServiceProvider extends ServiceProvider
         */
 
         Blade::component(PublicDefault::class, 'public-default');
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | THEME PROVIDER REGISZTRÁLÁSA
+    |--------------------------------------------------------------------------
+    */
+
+    protected function registerThemeProvider(): void
+    {
+        if (!Schema::hasTable('options')) {
+            return;
+        }
+
+        $themeOption = Option::firstWithDefaults('currentThemeName');
+
+        $currentThemeName = $themeOption?->value ?? 'FocusDefaultTheme';
+
+        if (!is_string($currentThemeName) || trim($currentThemeName) === '') {
+            return;
+        }
+
+        $providerPath =
+            base_path("Themes/{$currentThemeName}/Providers/ThemeServiceProvider.php");
+
+        $providerClass =
+            "Themes\\{$currentThemeName}\\Providers\\ThemeServiceProvider";
+
+        if (
+            file_exists($providerPath) &&
+            class_exists($providerClass)
+        ) {
+            $this->app->register($providerClass);
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MODULE PROVIDEREK REGISZTRÁLÁSA
+    |--------------------------------------------------------------------------
+    */
+
+    protected function registerModuleProviders(): void
+    {
+        if (!Schema::hasTable('options')) {
+            return;
+        }
+
+        $modulesOption = Option::firstWithDefaults('ActiveModules');
+
+        $activeModules = (array) ($modulesOption->value ?? []);
+
+        foreach ($activeModules as $moduleName) {
+
+            if (!is_string($moduleName) || trim($moduleName) === '') {
+                continue;
+            }
+
+            $providerClass =
+                "Modules\\{$moduleName}\\Providers\\ModuleServiceProvider";
+
+            if (class_exists($providerClass)) {
+
+                $this->app->register($providerClass);
+
+            }
+        }
     }
 }

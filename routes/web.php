@@ -21,7 +21,6 @@ use App\Http\Middleware\TwoFactorAuthMiddleware;
 
 require __DIR__.'/auth.php';
 
-
 Route::middleware(['auth', 'verified', '2fa'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/', function () {
@@ -120,6 +119,6 @@ Route::get('/categories/{category}', [FrontCategoryController::class, 'show'])->
 Route::get('/tags', [FrontTagController::class, 'index'])->name('front.tags');
 Route::get('/tag/{tag}', [FrontTagController::class, 'show'])->name('front.tag');
 
-Route::get('/{slug}', [FrontPostController::class, 'show'])->name('post.show');
-
+//Route::get('/{slug}', [FrontPostController::class, 'show'])->name('post.show');
+Route::fallback([FrontPostController::class, 'show']);
 

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Focus CMS - gen.php
+ */
+
 $themesPath = realpath(__DIR__.'/Themes');
 $themes = [];
 
@@ -16,7 +20,6 @@ if (is_dir($themesPath)) {
             $themes[] = [
                 'name' => $fileInfo->getFilename(),
                 'path' => $targetPath,
-                //'relativePath' => str_replace(realpath(__DIR__.'/..').'/', '', $targetPath)
                 'relativePath' => str_replace(realpath(__DIR__).'/', '', $targetPath)
             ];
 

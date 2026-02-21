@@ -1,3 +1,7 @@
+/**
+ * Focus CMS - vite.config.js
+ */
+
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import path from 'path';
@@ -82,47 +86,86 @@ export default defineConfig(() => {
  * Vite entrypointok (admin + frontend + theme)
  */
 function getViteInputs(themeName) {
-  const buildTarget = process.env.BUILD_TARGET || 'all';
-  const inputs = [];
 
-  // === Admin / App ===
-  if (buildTarget === 'all' || buildTarget === 'app') {
-    inputs.push(
-      'resources/css/app.css',
-      'resources/css/style.css',
-      'resources/js/app.js',
-      'resources/js/preview-post-content.js',
-      'resources/js/uppy.js'
-    );
-  }
+    const buildTarget =
+        process.env.BUILD_TARGET || 'all';
 
-  // === Theme ===
-  if (buildTarget === 'all') {
-    const themeCss = path.join(
-      'Themes',
-      themeName,
-      'resources',
-      'css',
-      'theme.css'
-    );
+    const inputs = [];
 
-    const themeJs = path.join(
-      'Themes',
-      themeName,
-      'resources',
-      'js',
-      'theme.js'
-    );
+    /*
+     |--------------------------------------------------------------------------
+     | App
+     |--------------------------------------------------------------------------
+     */
 
-    if (fs.existsSync(themeCss)) {
-      inputs.push(themeCss);
+    if (buildTarget === 'all' || buildTarget === 'app') {
+
+        inputs.push(
+            'resources/css/app.css',
+            'resources/css/style.css',
+            'resources/js/app.js',
+            'resources/js/preview-post-content.js',
+            'resources/js/uppy.js'
+        );
     }
 
-    if (fs.existsSync(themeJs)) {
-      inputs.push(themeJs);
-    }
-  }
+    /*
+     |--------------------------------------------------------------------------
+     | Theme
+     |--------------------------------------------------------------------------
+     */
 
-  console.log('📦 Vite inputs:', inputs);
-  return inputs;
+    if (buildTarget === 'all') {
+
+        const themeCss =
+            `Themes/${themeName}/resources/css/theme.css`;
+
+        const themeJs =
+            `Themes/${themeName}/resources/js/theme.js`;
+
+        if (fs.existsSync(themeCss))
+            inputs.push(themeCss);
+
+        if (fs.existsSync(themeJs))
+            inputs.push(themeJs);
+    }
+
+    /*
+     |--------------------------------------------------------------------------
+     | Modules (AUTO DISCOVERY)
+     |--------------------------------------------------------------------------
+     */
+
+    const modulesDir =
+        path.resolve('Modules');
+
+    if (fs.existsSync(modulesDir)) {
+
+        const modules =
+            fs.readdirSync(modulesDir)
+                .filter(name =>
+                    fs.statSync(
+                        path.join(modulesDir, name)
+                    ).isDirectory()
+                );
+
+        for (const moduleName of modules) {
+
+            const css =
+                `Modules/${moduleName}/resources/css/module.css`;
+
+            const js =
+                `Modules/${moduleName}/resources/js/module.js`;
+
+            if (fs.existsSync(css))
+                inputs.push(css);
+
+            if (fs.existsSync(js))
+                inputs.push(js);
+        }
+    }
+
+    console.log('\n📦 Vite inputs:\n', inputs, '\n');
+
+    return inputs;
 }

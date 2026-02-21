@@ -1,7 +1,5 @@
 {
     "require": {
-        "focus-cms/composer-focus-module-installer": "*",
-        "focus-cms/composer-focus-theme-installer": "*",
         "focus-cms/focus-cms-core-shortcodes": "@dev"
     }
 }

@@ -1,6 +1,17 @@
 {
+  "Modules/SampleModule/resources/css/module.css": {
+    "file": "css/module-D5yaabX3.css",
+    "src": "Modules/SampleModule/resources/css/module.css",
+    "isEntry": true
+  },
+  "Modules/SampleModule/resources/js/module.js": {
+    "file": "assets/module-Cu7UItrN.js",
+    "name": "module",
+    "src": "Modules/SampleModule/resources/js/module.js",
+    "isEntry": true
+  },
   "Themes/FocusDefaultTheme/resources/css/theme.css": {
-    "file": "css/theme-D_SiCeS6.css",
+    "file": "css/theme-DmLgUaQK.css",
     "src": "Themes/FocusDefaultTheme/resources/css/theme.css",
     "isEntry": true
   },
@@ -46,7 +57,7 @@
     "src": "node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2"
   },
   "resources/css/app.css": {
-    "file": "css/app-BgiDy5yl.css",
+    "file": "css/app-BIIB3kMM.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
