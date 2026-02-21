@@ -91,11 +91,9 @@ Route::middleware(['auth', 'verified', '2fa'])->group(function () {
         Route::get('/send-mail', [\App\Http\Controllers\Admin\SendMailController::class, 'showMailForm'])->name('admin.mail-form');
         Route::post('/send-mail', [\App\Http\Controllers\Admin\SendMailController::class, 'sendMail'])->name('admin.send-mail');
     });
+
+    Route::get('/images', [ImageController::class, 'index']);
 });
-
-
-
-
 
 
 Route::middleware(['auth'])->group(function () {
@@ -115,7 +113,6 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/', [FrontPostController::class, 'home'])->name('front.home');;
 
 Route::get('/maintenance', [FrontMaintenanceController::class, 'index'])->name('maintenance');
-Route::get('/images', [ImageController::class, 'index']);
 
 Route::get('/categories', [FrontCategoryController::class, 'index'])->name('front.categories');
 Route::get('/categories/{category}', [FrontCategoryController::class, 'show'])->name('front.category');
