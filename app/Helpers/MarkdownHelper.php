@@ -60,26 +60,6 @@ if (!function_exists('markdownToHtml')) {
                 $nl2br
             );
 
-
-        /*
-         |--------------------------------------------------------------------------
-         | 3. Blade render
-         |--------------------------------------------------------------------------
-         |
-         | lehetővé teszi Blade shortcode jellegű használatot:
-         |
-         | {!! something !!}
-         | <x-component />
-         |
-         */
-
-        $text =
-            Blade::render(
-                $text,
-                []
-            );
-
-
         return $text;
     }
 }
