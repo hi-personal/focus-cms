@@ -120,5 +120,4 @@ Route::get('/tags', [FrontTagController::class, 'index'])->name('front.tags');
 Route::get('/tag/{tag}', [FrontTagController::class, 'show'])->name('front.tag');
 
 //Route::get('/{slug}', [FrontPostController::class, 'show'])->name('post.show');
-Route::fallback([FrontPostController::class, 'show']);
-
+Route::get('/{slug}', [FrontPostController::class, 'show'])->name('post.show');
