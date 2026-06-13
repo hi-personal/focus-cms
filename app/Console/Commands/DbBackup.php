@@ -64,6 +64,7 @@ class DbBackup extends Command
             '--set-charset ' .
             '--add-drop-table ' .
             '--complete-insert ' .
+            '--create-options ' .
             '--skip-lock-tables ' .
             '--disable-keys ' .
             '--extended-insert=FALSE ' .
