@@ -37,25 +37,6 @@ class DbBackup extends Command
         $collation = $this->option('collation');
 
         // 1. Csak struktúra exportálása
-        // $schemaCommand = sprintf(
-        //     'MYSQL_PWD=%s /usr/bin/mysqldump ' .
-        //     '--no-tablespaces ' .              // KULCS: Tablespace-ek kihagyása
-        //     '--no-data ' .
-        //     '--default-character-set=%s ' .
-        //     '--set-charset ' .
-        //     '--add-drop-database ' .
-        //     '--add-drop-table ' .
-        //     '--complete-insert ' .
-        //     '--skip-lock-tables ' .            // További biztonság shared hostingra
-        //     '-h %s -u %s %s > %s',
-        //     escapeshellarg($db['password']),
-        //     $charset,
-        //     escapeshellarg($db['host']),
-        //     escapeshellarg($db['username']),
-        //     escapeshellarg($db['database']),
-        //     escapeshellarg($schemaFile)
-        // );
-
         $schemaCommand = sprintf(
             'MYSQL_PWD=%s /usr/bin/mysqldump ' .
             '--no-tablespaces ' .
@@ -81,14 +62,14 @@ class DbBackup extends Command
         // 2. Csak adatok exportálása
         $dataCommand = sprintf(
             'MYSQL_PWD=%s /usr/bin/mysqldump ' .
-            '--no-tablespaces ' .              // KULCS: Tablespace-ek kihagyása
+            '--no-tablespaces ' .
             '--no-create-info ' .
             '--default-character-set=%s ' .
             '--set-charset ' .
             '--hex-blob ' .
             '--complete-insert ' .
             '--extended-insert ' .
-            '--skip-lock-tables ' .            // További biztonság shared hostingra
+            '--skip-lock-tables ' .
             '-h %s -u %s %s | gzip > %s',
             escapeshellarg($db['password']),
             $charset,
@@ -125,7 +106,6 @@ class DbBackup extends Command
             escapeshellarg($schemaFile),
             escapeshellarg($finalFile)
         );
-
         exec($finalCommand);
 
         // Adatok hozzáfűzése
@@ -133,8 +113,19 @@ class DbBackup extends Command
             escapeshellarg($dataFile),
             escapeshellarg($finalFile)
         );
-
         exec($finalCommand2);
+
+        // 4. Collation javítás a backup fájlban (mysqldump hülyeségének javítása)
+        $this->info('Fixing collation in backup file...');
+        $fixCommand = sprintf(
+            'gunzip -c %s | sed "s/utf8mb4_unicode_ci/utf8mb4_hungarian_ci/g" | gzip > %s.tmp && mv %s.tmp %s',
+            escapeshellarg($finalFile),
+            escapeshellarg($finalFile),
+            escapeshellarg($finalFile),
+            escapeshellarg($finalFile)
+        );
+        exec($fixCommand);
+        $this->info('✓ Collation fixed to utf8mb4_hungarian_ci');
 
         // Temp fájlok törlése
         File::delete($schemaFile, $dataFile);
@@ -174,7 +165,7 @@ class DbBackup extends Command
 
         $command = sprintf(
             'gunzip -c %s | mysql ' .
-            '--no-tablespaces ' .           // Restore-nál is opcionális
+            '--no-tablespaces ' .
             '--default-character-set=%s ' .
             '--init-command="SET NAMES %s COLLATE %s" ' .
             '-h %s -u %s -p%s %s',
