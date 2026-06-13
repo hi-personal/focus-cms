@@ -1,11 +1,19 @@
+@php
+    $defaultLocale=config('app.locale');
+    $supportedLocales=config('app.supported_locales',[]);
+@endphp
+
 <x-app-layout :includeTinymce="false">
 
     <div class="container max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 pb-8 bg-white min-h-screen">
 
         <div class="lg:hidden text-center">
-            <h1 class="text-2xl font-bold">{{ __(Str::ucfirst($taxonomy_name)) }}</h1>
-        </div>
 
+            <h1 class="text-2xl font-bold">
+                {{ __(Str::ucfirst($taxonomy_name)) }}
+            </h1>
+
+        </div>
 
         @if(session('success'))
 
@@ -22,7 +30,6 @@
 
         @endif
 
-
         @if(session('error'))
 
             <div
@@ -38,7 +45,6 @@
 
         @endif
 
-
         <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-2">
 
             <div class="p-2">
@@ -47,14 +53,14 @@
                     Új {{ $config['title']??$taxonomy_name }} létrehozása
                 </h3>
 
-
-                <form method="post" action="{{ route('taxonomy.create',['taxonomy_name'=>$taxonomy_name]) }}">
+                <form
+                    method="post"
+                    action="{{ route('taxonomy.create',['taxonomy_name'=>$taxonomy_name]) }}"
+                >
 
                     @csrf
 
-
                     <div class="p-4 border border-gray-300 rounded">
-
 
                         @if($hierarchical)
 
@@ -73,7 +79,7 @@
                                         value="{{ $term->id }}"
                                         {{ session('parent_id')==$term->id ? "selected":null }}
                                     >
-                                        {{ (empty($term->depth)?null:str_repeat("- ",$term->depth)." ").$term->title }}
+                                        {{ (empty($term->depth)?null:str_repeat("- ",$term->depth)." ").$term->localizedTitle() }}
                                     </option>
 
                                 @endforeach
@@ -82,31 +88,75 @@
 
                         @endif
 
+                        @foreach($supportedLocales as $locale)
 
-                        <label>Cím</label>
+                            @php
 
-                        <input
-                            type="text"
-                            name="title"
-                            class="mt-2 mb-2 w-full border border-gray-300 rounded px-2 py-1"
-                            placeholder="Title"
-                            autofocus
-                        >
+                                $isDefault=
+                                    $locale===$defaultLocale;
 
+                                $titleFieldName=
+                                    "title-{$locale}";
 
-                        <label>Leírás</label>
+                                $nameFieldName=
+                                    "name-{$locale}";
 
-                        <textarea
-                            name="description"
-                            class="my-2 w-full border border-gray-300 rounded"
-                            placeholder="Leírás"
-                        ></textarea>
+                                $descriptionFieldName=
+                                    "description-{$locale}";
 
+                            @endphp
+
+                            <div class="mb-6 p-4 border rounded bg-gray-50">
+
+                                <div class="mb-4 text-lg font-bold">
+                                    {{ strtoupper($locale) }}
+                                </div>
+
+                                <label>
+                                    Cím ({{ strtoupper($locale) }})
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="{{ $titleFieldName }}"
+                                    value="{{ old($titleFieldName) }}"
+                                    class="mt-2 mb-2 w-full border border-gray-300 rounded px-2 py-1"
+                                    placeholder="Title ({{ strtoupper($locale) }})"
+                                    {{ $isDefault ? 'required' : null }}
+                                >
+
+                                <label>
+                                    Keresőbarát név ({{ strtoupper($locale) }})
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="{{ $nameFieldName }}"
+                                    value="{{ old($nameFieldName) }}"
+                                    class="mt-2 mb-2 w-full border border-gray-300 rounded px-2 py-1"
+                                    placeholder="Slug ({{ strtoupper($locale) }})"
+                                >
+
+                                <label>
+                                    Leírás ({{ strtoupper($locale) }})
+                                </label>
+
+                                <textarea
+                                    name="{{ $descriptionFieldName }}"
+                                    class="my-2 w-full border border-gray-300 rounded"
+                                    placeholder="Leírás ({{ strtoupper($locale) }})"
+                                >{{ old($descriptionFieldName) }}</textarea>
+
+                            </div>
+
+                        @endforeach
 
                         <button
                             type="submit"
                             class="my-2 py-2 px-3 bg-blue-500 hover:bg-blue-400 text-white border rounded"
-                        >Mentés</button>
+                        >
+                            Mentés
+                        </button>
 
                     </div>
 
@@ -114,13 +164,11 @@
 
             </div>
 
-
             <div class="p-2">
 
                 <h3 class="lg:mb-4">
                     {{ __(ucfirst($taxonomy_name)) }}
                 </h3>
-
 
                 <table class="w-full border-collapse table-auto">
 
@@ -130,16 +178,21 @@
 
                             <th class="border p-2"></th>
 
-                            <th class="border p-2">Cím</th>
+                            <th class="border p-2">
+                                Cím
+                            </th>
 
-                            <th class="border p-2">ID</th>
+                            <th class="border p-2">
+                                ID
+                            </th>
 
-                            <th class="border p-2">P</th>
+                            <th class="border p-2">
+                                P
+                            </th>
 
                         </tr>
 
                     </thead>
-
 
                     <tbody>
 
@@ -152,7 +205,9 @@
                             <tr class="hover:bg-gray-100">
 
                                 <td class="border p-2 text-center">
+
                                     <input type="checkbox">
+
                                 </td>
 
                                 <td class="border p-3">
@@ -161,7 +216,7 @@
                                         class="hover:text-blue-600"
                                         href="{{ route('taxonomy.edit',['taxonomy_name'=>$taxonomy_name,'term'=>$term->id]) }}"
                                     >
-                                        {{ (empty($term->depth)?null:str_repeat("- ",$term->depth)." ").$term->title }}
+                                        {{ (empty($term->depth)?null:str_repeat("- ",$term->depth)." ").$term->localizedTitle() }}
                                     </a>
 
                                 </td>
@@ -180,7 +235,10 @@
 
                             <tr>
 
-                                <td colspan="4" class="border p-2 text-center text-gray-500">
+                                <td
+                                    colspan="4"
+                                    class="border p-2 text-center text-gray-500"
+                                >
                                     Nincs találat
                                 </td>
 

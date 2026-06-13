@@ -74,24 +74,74 @@
                 <template x-if="true">
                     <div class="contents pt-5 pb-8 px-1 my-3 rounded border-solid border-slate-300  border shadow-lg overflow-hidden" :class="{ 'max-md:hidden': !isOpen }">
                         <!-- Status -->
-                        <div class="">
-                            <label for="status" class="block text-md font-medium text-gray-700"><i class="mdi mdi-file-settings-outline"></i> Állapot</label>
-                            <select id="status" name="status" class="w-full py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Összes</option>
-                                <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Publikált</option>
-                                <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Vázlat</option>
-                                <option value="private" {{ request('status') == 'private' ? 'selected' : '' }}>Privát</option>
-                                <option value="trash" {{ request('status') == 'trash' ? 'selected' : '' }}>Lomtárban</option>
-                            </select>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <!-- Status -->
+                            <div>
+                                <label for="status" class="block text-md font-medium text-gray-700">
+                                    <i class="mdi mdi-file-settings-outline"></i> Állapot
+                                </label>
+                                <select
+                                    id="status"
+                                    name="status"
+                                    class="w-full py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                >
+                                    <option value="">Összes</option>
+                                    <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>
+                                        Publikált
+                                    </option>
+                                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>
+                                        Vázlat
+                                    </option>
+                                    <option value="private" {{ request('status') == 'private' ? 'selected' : '' }}>
+                                        Privát
+                                    </option>
+                                    <option value="trash" {{ request('status') == 'trash' ? 'selected' : '' }}>
+                                        Lomtárban
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Lang -->
+                            <div>
+                                <label for="lang" class="block text-md font-medium text-gray-700">
+                                    <i class="mdi mdi-translate"></i> Nyelv
+                                </label>
+                                <select
+                                    id="lang"
+                                    name="lang"
+                                    class="w-full py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                >
+                                    @foreach(config('app.supported_locales') as $locale)
+                                        <option
+                                            value="{{ $locale }}"
+                                            {{ request('lang') == $locale ? 'selected' : '' }}
+                                        >
+                                            {{ strtoupper($locale) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                         </div>
 
                         <!-- Author -->
                         <div class="">
-                            <label for="author" class="block text-md font-medium text-gray-700"><i class="mdi mdi-account-outline"></i> Szerző</label>
-                            <select name="author" id="author" class="w-full py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <label for="author" class="block text-md font-medium text-gray-700">
+                                <i class="mdi mdi-account-outline"></i> Szerző
+                            </label>
+
+                            <select
+                                name="author"
+                                id="author"
+                                class="w-full py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            >
                                 <option value="">Összes</option>
                                 @foreach ($users as $user)
-                                    <option value="{{ $user->id }}" {{ request('author') == $user->id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $user->id }}"
+                                        {{ request('author') == $user->id ? 'selected' : '' }}
+                                    >
                                         {{ $user->name }}
                                     </option>
                                 @endforeach
@@ -280,7 +330,7 @@
                                                         icon="true"
                                                         only="icon"
                                                         class="ml-1"
-                                                    />{{ $post->title }}</span>
+                                                    />[{{ $post->lang }}] {{ $post->title }}</span>
                                             </a>
                                         </div>
                                         <!-- Other fields -->
@@ -308,7 +358,7 @@
                                 <!-- Desktop: Last 5 columns -->
                                 <td class="border flex py-2 max-md:hidden cursor-pointer">
                                     <a class="w-full h-full px-2" href="{{ route('post.edit', ['post_type' => $postType, 'post' => $post->id]) }}" target="_self">
-                                        {{ $post->title }}
+                                        [{{ $post->lang }}] {{ $post->title }}
                                     </a>
                                 </td>
                                 <td class="border p-2 max-md:hidden">{{ $post->author->name ?? 'N/A' }}</td>
