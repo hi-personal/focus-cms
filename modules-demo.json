@@ -1,0 +1,22 @@
+{
+    "require": {
+        "focus-cms/focus-cms-front-module": "@dev",
+        "focus-cms/focus-cms-core-shortcodes": "@dev"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Projects/focus-cms-front-module",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../Projects/focus-cms-core-shortcodes",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
+}

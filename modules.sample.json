@@ -1,0 +1,6 @@
+{
+    "require": {
+        "focus-cms/focus-cms-front-module": "@dev",
+        "focus-cms/focus-cms-core-shortcodes": "@dev"
+    }
+}

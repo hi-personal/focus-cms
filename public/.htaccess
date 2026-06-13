@@ -1,0 +1,40 @@
+<IfModule mod_rewrite.c>
+
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # STATIC HTML CACHE
+
+    # homepage
+    RewriteCond %{REQUEST_URI} ^/$
+    RewriteCond %{DOCUMENT_ROOT}/../storage/page-cache/index.html -f
+    RewriteRule ^$ /../storage/page-cache/index.html [L]
+
+    # other pages
+    RewriteCond %{REQUEST_METHOD} GET
+    RewriteCond %{REQUEST_URI} !^/admin
+    RewriteCond %{REQUEST_URI} !^/build
+    RewriteCond %{REQUEST_URI} !^/storage
+    RewriteCond %{REQUEST_URI} !^/assets
+    RewriteCond %{DOCUMENT_ROOT}/../storage/page-cache%{REQUEST_URI}/index.html -f
+    RewriteRule ^(.*)$ /../storage/page-cache/$1/index.html [L]
+
+    # LARAVEL
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+
+</IfModule>

@@ -1,0 +1,9 @@
+{
+    "plugins": [
+      ["prismjs", {
+        "languages": ["php", "bash", "markup", "css", "javascript", "json"],
+        "theme": "tomorrow",
+        "css": true
+      }]
+    ]
+  }

@@ -1,0 +1,5 @@
+{
+    "require": {
+        "focus-cms/focus-default-theme": "@dev"
+    }
+}

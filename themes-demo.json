@@ -1,0 +1,21 @@
+{
+    "require": {
+        "focus-cms/focus-default-theme": "@dev"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../Projects/focus-default-theme",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../Projects/focus-second-theme",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
+}
