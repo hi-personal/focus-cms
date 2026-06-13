@@ -30,122 +30,77 @@ class DbBackup extends Command
 
         $timestamp = now()->format('Y-m-d_H-i-s');
         $baseFile = "{$backupDir}/{$db['database']}_{$timestamp}";
-        $schemaFile = $baseFile . '_schema.sql';
-        $dataFile = $baseFile . '_data.sql.gz';
 
         $charset = $this->option('charset');
         $collation = $this->option('collation');
 
-        // 1. Csak struktúra exportálása
-        $schemaCommand = sprintf(
+        // Egyetlen mysqldump parancs (struktúra + adatok együtt)
+        $backupFile = $baseFile . '_full.sql';
+        $compressedFile = $baseFile . '_full.sql.gz';
+
+        $command = sprintf(
             'MYSQL_PWD=%s /usr/bin/mysqldump ' .
             '--no-tablespaces ' .
-            '--no-data ' .
+            '--single-transaction ' .
+            '--quick ' .
             '--default-character-set=%s ' .
             '--set-charset ' .
             '--add-drop-table ' .
             '--complete-insert ' .
             '--create-options ' .
+            '--hex-blob ' .
             '--skip-lock-tables ' .
-            '--disable-keys ' .
-            '--extended-insert=FALSE ' .
-            '--quote-names ' .
             '-h %s -u %s %s > %s',
             escapeshellarg($db['password']),
             $charset,
             escapeshellarg($db['host']),
             escapeshellarg($db['username']),
             escapeshellarg($db['database']),
-            escapeshellarg($schemaFile)
+            escapeshellarg($backupFile)
         );
 
-        // 2. Csak adatok exportálása
-        $dataCommand = sprintf(
-            'MYSQL_PWD=%s /usr/bin/mysqldump ' .
-            '--no-tablespaces ' .
-            '--no-create-info ' .
-            '--default-character-set=%s ' .
-            '--set-charset ' .
-            '--hex-blob ' .
-            '--complete-insert ' .
-            '--extended-insert ' .
-            '--skip-lock-tables ' .
-            '-h %s -u %s %s | gzip > %s',
-            escapeshellarg($db['password']),
-            $charset,
-            escapeshellarg($db['host']),
-            escapeshellarg($db['username']),
-            escapeshellarg($db['database']),
-            escapeshellarg($dataFile)
-        );
+        $this->info('Exporting database...');
+        exec($command, $output, $exitCode);
 
-        $this->info('Exporting database schema...');
-        exec($schemaCommand, $schemaOutput, $schemaExit);
-
-        if ($schemaExit !== 0) {
-            $this->error('Schema export failed.');
-            $this->error('Command: ' . $schemaCommand);
+        if ($exitCode !== 0) {
+            $this->error('Database export failed.');
+            $this->error('Command: ' . $command);
             return Command::FAILURE;
         }
 
-        $this->info('Exporting database data...');
-        exec($dataCommand, $dataOutput, $dataExit);
-
-        if ($dataExit !== 0) {
-            $this->error('Data export failed.');
-            $this->error('Command: ' . $dataCommand);
-            return Command::FAILURE;
-        }
-
-        // 3. Összefűzés
-        $finalFile = $baseFile . '_full.sql.gz';
-        $finalCommand = sprintf(
-            'echo "/*!40101 SET NAMES %s COLLATE %s */;" | cat - %s | gzip > %s',
-            $charset,
-            $collation,
-            escapeshellarg($schemaFile),
-            escapeshellarg($finalFile)
-        );
-        exec($finalCommand);
-
-        // Adatok hozzáfűzése
-        $finalCommand2 = sprintf('gunzip -c %s >> %s',
-            escapeshellarg($dataFile),
-            escapeshellarg($finalFile)
-        );
-        exec($finalCommand2);
-
-        // 4. Collation javítás a backup fájlban (mysqldump hülyeségének javítása)
+        // Collation javítás a backup fájlban
         $this->info('Fixing collation in backup file...');
         $fixCommand = sprintf(
-            'gunzip -c %s | sed "s/utf8mb4_unicode_ci/utf8mb4_hungarian_ci/g" | gzip > %s.tmp && mv %s.tmp %s',
-            escapeshellarg($finalFile),
-            escapeshellarg($finalFile),
-            escapeshellarg($finalFile),
-            escapeshellarg($finalFile)
+            'sed -i "s/utf8mb4_unicode_ci/utf8mb4_hungarian_ci/g" %s',
+            escapeshellarg($backupFile)
         );
         exec($fixCommand);
-        $this->info('✓ Collation fixed to utf8mb4_hungarian_ci');
 
-        // Temp fájlok törlése
-        File::delete($schemaFile, $dataFile);
+        // SET NAMES hozzáadása a fájl elejére
+        $headerCommand = sprintf(
+            'sed -i "1i/*!40101 SET NAMES %s COLLATE %s */;" %s',
+            $charset,
+            $collation,
+            escapeshellarg($backupFile)
+        );
+        exec($headerCommand);
 
-        // Ellenőrizd a végső fájl méretét
-        if (!File::exists($finalFile) || File::size($finalFile) === 0) {
+        // Tömörítés
+        $this->info('Compressing backup...');
+        $compressCommand = sprintf('gzip -f %s', escapeshellarg($backupFile));
+        exec($compressCommand);
+
+        // Ellenőrzés
+        if (!File::exists($compressedFile) || File::size($compressedFile) === 0) {
             $this->error('Final backup file is empty or missing!');
             return Command::FAILURE;
         }
 
-        $size = File::size($finalFile) / 1024 / 1024;
-        $this->info("Full backup created: {$finalFile}");
+        $size = File::size($compressedFile) / 1024 / 1024;
+        $this->info("Full backup created: {$compressedFile}");
         $this->info("Backup size: " . number_format($size, 2) . " MB");
         $this->info("Charset in backup: {$charset}");
         $this->info("Collation in backup: {$collation}");
-
-        // Ellenőrizd a backup tartalmát
-        $checkCommand = sprintf('gunzip -c %s | head -5', escapeshellarg($finalFile));
-        exec($checkCommand, $checkOutput);
-        $this->info("Backup header: " . implode("\n", array_slice($checkOutput, 0, 3)));
 
         return Command::SUCCESS;
     }
@@ -163,21 +118,38 @@ class DbBackup extends Command
             return Command::FAILURE;
         }
 
-        $command = sprintf(
-            'gunzip -c %s | mysql ' .
-            '--no-tablespaces ' .
-            '--default-character-set=%s ' .
-            '--init-command="SET NAMES %s COLLATE %s" ' .
-            '-h %s -u %s -p%s %s',
-            escapeshellarg($backupFile),
-            $charset,
-            $charset,
-            $collation,
-            escapeshellarg($db['host']),
-            escapeshellarg($db['username']),
-            escapeshellarg($db['password']),
-            escapeshellarg($db['database'])
-        );
+        // Ha gzip tömörített
+        if (str_ends_with($backupFile, '.gz')) {
+            $command = sprintf(
+                'gunzip -c %s | mysql ' .
+                '--default-character-set=%s ' .
+                '--init-command="SET NAMES %s COLLATE %s" ' .
+                '-h %s -u %s -p%s %s',
+                escapeshellarg($backupFile),
+                $charset,
+                $charset,
+                $collation,
+                escapeshellarg($db['host']),
+                escapeshellarg($db['username']),
+                escapeshellarg($db['password']),
+                escapeshellarg($db['database'])
+            );
+        } else {
+            $command = sprintf(
+                'mysql ' .
+                '--default-character-set=%s ' .
+                '--init-command="SET NAMES %s COLLATE %s" ' .
+                '-h %s -u %s -p%s %s < %s',
+                $charset,
+                $charset,
+                $collation,
+                escapeshellarg($db['host']),
+                escapeshellarg($db['username']),
+                escapeshellarg($db['password']),
+                escapeshellarg($db['database']),
+                escapeshellarg($backupFile)
+            );
+        }
 
         $this->info("Restoring database from: {$backupFile}");
         exec($command, $output, $exitCode);
