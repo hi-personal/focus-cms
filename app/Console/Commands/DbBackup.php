@@ -37,16 +37,37 @@ class DbBackup extends Command
         $collation = $this->option('collation');
 
         // 1. Csak struktúra exportálása
+        // $schemaCommand = sprintf(
+        //     'MYSQL_PWD=%s /usr/bin/mysqldump ' .
+        //     '--no-tablespaces ' .              // KULCS: Tablespace-ek kihagyása
+        //     '--no-data ' .
+        //     '--default-character-set=%s ' .
+        //     '--set-charset ' .
+        //     '--add-drop-database ' .
+        //     '--add-drop-table ' .
+        //     '--complete-insert ' .
+        //     '--skip-lock-tables ' .            // További biztonság shared hostingra
+        //     '-h %s -u %s %s > %s',
+        //     escapeshellarg($db['password']),
+        //     $charset,
+        //     escapeshellarg($db['host']),
+        //     escapeshellarg($db['username']),
+        //     escapeshellarg($db['database']),
+        //     escapeshellarg($schemaFile)
+        // );
+
         $schemaCommand = sprintf(
             'MYSQL_PWD=%s /usr/bin/mysqldump ' .
-            '--no-tablespaces ' .              // KULCS: Tablespace-ek kihagyása
+            '--no-tablespaces ' .
             '--no-data ' .
             '--default-character-set=%s ' .
             '--set-charset ' .
-            '--add-drop-database ' .
             '--add-drop-table ' .
             '--complete-insert ' .
-            '--skip-lock-tables ' .            // További biztonság shared hostingra
+            '--skip-lock-tables ' .
+            '--disable-keys ' .
+            '--extended-insert=FALSE ' .
+            '--quote-names ' .
             '-h %s -u %s %s > %s',
             escapeshellarg($db['password']),
             $charset,
