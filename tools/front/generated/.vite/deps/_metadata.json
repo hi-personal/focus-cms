@@ -1,0 +1,45 @@
+{
+  "hash": "11706c14",
+  "configHash": "c94c66cf",
+  "lockfileHash": "628bf11b",
+  "browserHash": "b6d53cc6",
+  "optimized": {
+    "@boxicons/js": {
+      "src": "../../node_modules/@boxicons/js/dist/esm/index.js",
+      "file": "@boxicons_js.js",
+      "fileHash": "9a0a04e0",
+      "needsInterop": false
+    },
+    "alpinejs": {
+      "src": "../../../../../node_modules/alpinejs/dist/module.esm.js",
+      "file": "alpinejs.js",
+      "fileHash": "1b536cce",
+      "needsInterop": false
+    },
+    "jquery": {
+      "src": "../../../../../node_modules/jquery/dist-module/jquery.module.js",
+      "file": "jquery.js",
+      "fileHash": "bb50df2d",
+      "needsInterop": false
+    },
+    "js-cookie": {
+      "src": "../../../../../node_modules/js-cookie/dist/js.cookie.mjs",
+      "file": "js-cookie.js",
+      "fileHash": "64fc0d27",
+      "needsInterop": false
+    },
+    "photoswipe": {
+      "src": "../../../../../node_modules/photoswipe/dist/photoswipe.esm.js",
+      "file": "photoswipe.js",
+      "fileHash": "579bcc75",
+      "needsInterop": false
+    },
+    "photoswipe/lightbox": {
+      "src": "../../../../../node_modules/photoswipe/dist/photoswipe-lightbox.esm.js",
+      "file": "photoswipe_lightbox.js",
+      "fileHash": "ced485e5",
+      "needsInterop": false
+    }
+  },
+  "chunks": {}
+}

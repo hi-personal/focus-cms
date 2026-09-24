@@ -81,20 +81,43 @@ class ModuleRemoveCommand extends Command
         |--------------------------------------------------------------------------
         */
 
-        $option = Option::where('name', 'ActiveModules')->first();
+        $option = Option::firstWithDefaults('ActiveModules');
 
-        if ($option && is_array($option->value)) {
+        $activeModules = [];
 
-            $modules = array_filter(
-                $option->value,
-                fn ($m) => $m !== $module
-            );
+        if (!empty($option->value)) {
 
-            $option->value = array_values($modules);
-            $option->save();
+            if (is_array($option->value)) {
 
-            $this->info("Module removed from ActiveModules.");
+                $activeModules = $option->value;
+
+            } elseif (is_object($option->value)) {
+
+                $activeModules = (array) $option->value;
+
+            } elseif (is_string($option->value)) {
+
+                $activeModules = [$option->value];
+
+            }
+
         }
+
+        $activeModules = array_values(
+            array_filter(
+                $activeModules,
+                fn ($m) => $m !== $module
+            )
+        );
+
+        Option::updateOrCreate(
+            ['name' => 'ActiveModules'],
+            ['value' => $activeModules]
+        );
+
+        $this->writeActiveModulesJson($activeModules);
+
+        $this->info("Module removed from ActiveModules.");
 
         /*
         |--------------------------------------------------------------------------
@@ -111,10 +134,34 @@ class ModuleRemoveCommand extends Command
             $this->info("Module symlink removed.");
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Cache clear
+        |--------------------------------------------------------------------------
+        */
+
         $this->call('optimize:clear');
 
         $this->info("Module {$module} removal completed.");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * activeModules.json frissítése
+     */
+    private function writeActiveModulesJson(array $modules): void
+    {
+        sort($modules);
+
+        file_put_contents(
+            base_path('activeModules.json'),
+            json_encode(
+                [
+                    'modules' => array_values($modules)
+                ],
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+            ) . PHP_EOL
+        );
     }
 }

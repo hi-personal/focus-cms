@@ -383,7 +383,7 @@
                                 <input
                                     type="text"
                                     id="postHeadImage"
-                                    class="w-full rounded border border-gray-700"
+                                    class="p-2 w-full rounded border border-gray-700"
                                     name="head_image"
                                     value="{{ $head_image }}"
                                 >

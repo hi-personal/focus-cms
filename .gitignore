@@ -7,6 +7,8 @@
 /public/hot
 /public/storage
 /public/modulepublic
+/public/themepublic
+
 /storage/*.key
 /storage/logs/*
 /storage/framework/cache/*
@@ -36,7 +38,6 @@ auth.json
 
 npm-debug.log
 yarn-error.log
-!/public/build
 /resources/js/theme-*.js
 
 ###############################################################################
@@ -96,18 +97,32 @@ push
 !/Modules/.keep
 
 ###############################################################################
-# Theme public assets (generated or symlinked)
-###############################################################################
-
-/public/themepublic
-
-###############################################################################
 # CMS generated config files
 ###############################################################################
 
 currentTheme.json
+activeModules.json
 themes.json
 modules.json
+
+###############################################################################
+# FocusCMS local config
+###############################################################################
+
+config/focuscms/*
+!config/focuscms/Readme.md
+
+###############################################################################
+# Firebase
+###############################################################################
+
+storage/firebase/*.json
+
+###############################################################################
+# Page cache
+###############################################################################
+
+public/page-cache/*
 
 ###############################################################################
 # Misc
@@ -123,8 +138,3 @@ Homestead.yaml
 ###############################################################################
 
 composer.repositories.json
-
-config/focuscms/*
-!config/focuscms/Readme.md
-storage/firebase/*.json
-public/page-cache/*

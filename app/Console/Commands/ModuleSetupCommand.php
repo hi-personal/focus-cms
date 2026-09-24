@@ -50,17 +50,14 @@ class ModuleSetupCommand extends Command
 
             if (is_array($option->value)) {
                 $activeModules = $option->value;
-
             } elseif (is_object($option->value)) {
                 $activeModules = (array) $option->value;
-
             } elseif (is_string($option->value)) {
                 $activeModules = [$option->value];
             }
         }
 
         if (!in_array($module, $activeModules, true)) {
-
             $activeModules[] = $module;
 
             Option::updateOrCreate(
@@ -68,12 +65,14 @@ class ModuleSetupCommand extends Command
                 ['value' => array_values(array_unique($activeModules))]
             );
 
+            $this->writeActiveModulesJson($activeModules);
+
             $this->info("Module registered in ActiveModules.");
 
         } else {
+            $this->writeActiveModulesJson($activeModules);
 
             $this->info("Module already registered.");
-
         }
 
         /*
@@ -290,5 +289,18 @@ class ModuleSetupCommand extends Command
         }
 
         return str_repeat('../', count($fromParts)) . implode('/', $toParts);
+    }
+
+    private function writeActiveModulesJson(array $modules): void
+    {
+        file_put_contents(
+            base_path('activeModules.json'),
+            json_encode(
+                [
+                    'modules' => array_values($modules)
+                ],
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+            )
+        );
     }
 }

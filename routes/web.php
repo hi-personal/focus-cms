@@ -127,14 +127,30 @@ Route::middleware([
 });
 
 
+// Modulok WEB útvonalai
 foreach (glob(base_path('Modules/*/routes/web.php')) as $routeFile) {
     require $routeFile;
 }
 
-
+// Témák WEB útvonalai
 foreach (glob(base_path('Themes/*/routes/web.php')) as $routeFile) {
     require $routeFile;
 }
 
+// 🌐 Modulok API útvonalai csoportosítva
+Route::prefix('api')
+    ->middleware('api')
+    ->group(function () {
+        foreach (glob(base_path('Modules/*/routes/api.php')) as $file) {
+            require $file;
+        }
+    });
 
-
+// 🎨 Témák API útvonalai csoportosítva
+Route::prefix('api')
+    ->middleware('api')
+    ->group(function () {
+        foreach (glob(base_path('Themes/*/routes/api.php')) as $file) {
+            require $file;
+        }
+    });

@@ -1,0 +1,32 @@
+{
+    "name": "focus-front",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "watch": "vite"
+    },
+    "dependencies": {
+        "@boxicons/js": "*",
+        "@iconify-json/tabler": "*",
+        "@iconify/tailwind4": "*",
+        "@mdi/font": "*",
+        "@mdi/light-font": "*",
+        "@uppy/core": "*",
+        "@uppy/dashboard": "*",
+        "@uppy/xhr-upload": "*",
+        "alpinejs": "*",
+        "daisyui": "*",
+        "flyonui": "*",
+        "jquery": "*",
+        "photoswipe": "*",
+        "tailwindcss": "*"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "4.3.3",
+        "laravel-vite-plugin": "^3.2.0",
+        "vite": "^8.2.2"
+    }
+}

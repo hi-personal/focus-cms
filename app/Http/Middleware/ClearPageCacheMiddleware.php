@@ -16,7 +16,7 @@ class ClearPageCacheMiddleware
         Request $request,
         Closure $next
     ): Response {
-
+return $next($request);
         /*
         |--------------------------------------------------------------------------
         | Locale from URL

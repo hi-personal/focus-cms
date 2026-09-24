@@ -18,51 +18,52 @@ class AppServiceProvider extends ServiceProvider
      * Register any application services.
      */
     public function register(): void
-{
-    /*
-    |--------------------------------------------------------------------------
-    | Core services
-    |--------------------------------------------------------------------------
-    */
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Core services
+        |--------------------------------------------------------------------------
+        */
 
-    $this->app->singleton(CustomMarkdownService::class, fn () =>
-        new CustomMarkdownService()
-    );
+        $this->app->singleton(
+            CustomMarkdownService::class,
+            fn () => new CustomMarkdownService()
+        );
 
-    $this->app->singleton(ShortcodeRegistry::class);
+        $this->app->singleton(ShortcodeRegistry::class);
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Theme és Module providerek késleltetett regisztrálása
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Theme és Module providerek késleltetett regisztrálása
+        |--------------------------------------------------------------------------
+        */
 
-    $this->app->booted(function () {
+        $this->app->booted(function () {
 
-        try {
+            try {
 
-            if (!$this->app->bound('db')) {
-                return;
+                if (!$this->app->bound('db')) {
+                    return;
+                }
+
+                if (!Schema::hasTable('options')) {
+                    return;
+                }
+
+                $this->registerThemeProvider();
+
+                $this->registerModuleProviders();
+
+            } catch (\Throwable $e) {
+
+                // Composer bootstrap alatt vagy DB nincs még kész
+                // Biztonságosan ignoráljuk
+
             }
 
-            if (!Schema::hasTable('options')) {
-                return;
-            }
-
-            $this->registerThemeProvider();
-
-            $this->registerModuleProviders();
-
-        } catch (\Throwable $e) {
-
-            // Composer bootstrap alatt vagy DB nincs még kész
-            // Biztonságosan ignoráljuk
-
-        }
-
-    });
-}
+        });
+    }
 
 
     /**
@@ -70,6 +71,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /*
+        |--------------------------------------------------------------------------
+        | Vite
+        |--------------------------------------------------------------------------
+        | A ttbooking/vite-manager ViteServiceProvider deferred provider.
+        | A @viteApp Blade direktívát azonban a provider boot() metódusa
+        | regisztrálja. A 'vite' service korai feloldásával biztosítjuk,
+        | hogy a directive a Blade view-k fordítása előtt rendelkezésre álljon.
+        |
+        | A service név használata szándékos: így az alkalmazás nem függ
+        | a Vite manager provider konkrét osztályától vagy implementációjától.
+        |--------------------------------------------------------------------------
+        */
+
+        $this->app->make('vite');
+
+
         /*
         |--------------------------------------------------------------------------
         | Local environment overrides

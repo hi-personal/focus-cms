@@ -1,0 +1,35 @@
+{
+    "name": "FocusCMS",
+    "type": "app",
+    "admin": {
+        "priority": 0,
+        "watch": {
+            "views": [
+                "resources/views/**/*.blade.php"
+            ]
+        },
+        "build": {
+            "js": [
+                "resources/js/app.js"
+            ],
+            "css": [
+                "resources/css/app.css"
+            ]
+        },
+        "plugins": {
+            "npm": [
+                "tailwindcss@4.3.3",
+                "daisyui@5.7.22",
+                "alpinejs@3.16.3",
+                "jquery@4.0.0",
+                "js-cookie@3.0.8",
+                "photoswipe@5.4.4",
+                "@mdi/font@7.4.47",
+                "@uppy/core@6.0.0",
+                "@uppy/dashboard@6.0.0",
+                "@uppy/xhr-upload@5.2.0",
+                "boxicons@2.1.4"
+            ]
+        }
+    }
+}

@@ -6,6 +6,9 @@
 //
 === TOC END === */
 
+@reference "tailwindcss";
+
+
 #twteszt {
     @apply m-4 p-4 bg-blue-500 text-black;
 }

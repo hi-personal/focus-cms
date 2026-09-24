@@ -1,3 +1,5 @@
+// md-editor.js
+
 window.currentGalleryDiv = null;
 
 import { registerResizeEditor } from './resize-editor.js';

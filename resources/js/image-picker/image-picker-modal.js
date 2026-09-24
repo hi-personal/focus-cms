@@ -18,7 +18,6 @@
 // === TOC END ===
 
 
-import { parseJSON } from 'jquery';
 import { setVar, getVar } from '../image-picker.js';
 import { updateImageClasses } from './update-classes.js';
 

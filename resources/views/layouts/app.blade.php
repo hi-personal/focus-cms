@@ -15,18 +15,10 @@
         @props(['includeTinymce' => false])
 
         @php
-            $viteAssets = [
-                'resources/css/app.css',
-                'resources/css/style.css',
-                'resources/js/app.js',
-            ];
-
-            if ($includeTinymce ?? false) {
-                $viteAssets[] = 'resources/js/uppy.js';
-            }
+            $viteIsActive = function_exists('check_module_vite_is_active') ? check_module_vite_is_active() : false;
         @endphp
 
-        @vite($viteAssets)
+        @viteApp('admin')
 
         @if ($includeTinymce ?? false)
             <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
@@ -56,7 +48,6 @@
                         </header>
                     @endisset
                 </div>
-
 
                 <!-- Page Content -->
                 <main class="pt-6 pb-10">
