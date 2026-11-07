@@ -116,6 +116,9 @@ const focusIsolatedPackageResolver = {
 export default defineConfig({
     "root": projectRoot,
     "cacheDir": path.resolve(projectRoot, "tools/front/generated/.vite"),
+    "resolve": {
+        "preserveSymlinks": true,
+    },
     "server": {
         "host": "0.0.0.0",
         "port": 5174,

@@ -1280,6 +1280,9 @@ class FocusSyncCommand extends Command
         $defaults = [
             'root' => '__FOCUS_PROJECT_ROOT__',
             'cacheDir' => "__FOCUS_PROJECT_ROOT__/tools/{$target}/generated/.vite",
+            'resolve' => [
+                'preserveSymlinks' => true
+            ],
             'server' => [
                 'host' => '0.0.0.0',
                 'port' => (int) $port,

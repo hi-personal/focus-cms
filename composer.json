@@ -18,6 +18,7 @@
         "erusev/parsedown-extra": "^0.8.1",
         "focus-cms/composer-focus-module-installer": "dev-main",
         "focus-cms/composer-focus-theme-installer": "dev-main",
+        "focus-cms/focus-default-theme": "dev-main",
         "intervention/image": "^3.11",
         "jenssegers/agent": "^2.6",
         "kitloong/laravel-migrations-generator": "^7.0",
