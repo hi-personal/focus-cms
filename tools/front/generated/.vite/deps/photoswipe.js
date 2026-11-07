@@ -1,4 +1,4 @@
-//#region ../../../node_modules/photoswipe/dist/photoswipe.esm.js
+//#region node_modules/photoswipe/dist/photoswipe.esm.js
 /*!
 * PhotoSwipe 5.4.4 - https://photoswipe.com
 * (c) 2024 Dmytro Semenov

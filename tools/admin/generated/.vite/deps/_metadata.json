@@ -1,50 +1,8 @@
 {
-  "hash": "2c81be7e",
-  "configHash": "4df1ad36",
-  "lockfileHash": "628bf11b",
-  "browserHash": "81963719",
-  "optimized": {
-    "@uppy/core": {
-      "src": "../../../../../node_modules/@uppy/core/lib/index.js",
-      "file": "@uppy_core.js",
-      "fileHash": "553c096a",
-      "needsInterop": false
-    },
-    "@uppy/dashboard": {
-      "src": "../../../../../node_modules/@uppy/dashboard/lib/index.js",
-      "file": "@uppy_dashboard.js",
-      "fileHash": "271131ae",
-      "needsInterop": false
-    },
-    "@uppy/xhr-upload": {
-      "src": "../../../../../node_modules/@uppy/xhr-upload/lib/index.js",
-      "file": "@uppy_xhr-upload.js",
-      "fileHash": "156c86b1",
-      "needsInterop": false
-    },
-    "alpinejs": {
-      "src": "../../../../../node_modules/alpinejs/dist/module.esm.js",
-      "file": "alpinejs.js",
-      "fileHash": "b532a869",
-      "needsInterop": false
-    },
-    "jquery": {
-      "src": "../../../../../node_modules/jquery/dist-module/jquery.module.js",
-      "file": "jquery.js",
-      "fileHash": "c9bda5dc",
-      "needsInterop": false
-    },
-    "js-cookie": {
-      "src": "../../../../../node_modules/js-cookie/dist/js.cookie.mjs",
-      "file": "js-cookie.js",
-      "fileHash": "f313ec1c",
-      "needsInterop": false
-    }
-  },
-  "chunks": {
-    "lib-DxrmiKCR": {
-      "file": "lib-DxrmiKCR.js",
-      "isDynamicEntry": false
-    }
-  }
+  "hash": "dbac7568",
+  "configHash": "6081fa24",
+  "lockfileHash": "9bccbc44",
+  "browserHash": "afbd2ab3",
+  "optimized": {},
+  "chunks": {}
 }

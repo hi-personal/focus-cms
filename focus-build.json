@@ -18,7 +18,9 @@
         },
         "plugins": {
             "npm": [
-                "tailwindcss@4.3.3",
+                "@tailwindcss/vite@4.3.3",
+                "laravel-vite-plugin@^3.2.0",
+                "vite@^8.2.2",
                 "daisyui@5.7.22",
                 "alpinejs@3.16.3",
                 "jquery@4.0.0",
@@ -29,7 +31,24 @@
                 "@uppy/dashboard@6.0.0",
                 "@uppy/xhr-upload@5.2.0",
                 "boxicons@2.1.4"
+            ],
+            "vite": [
+                {
+                    "package": "@tailwindcss/vite",
+                    "import": "tailwindcss",
+                    "call": true
+                },
+                {
+                    "package": "laravel-vite-plugin",
+                    "import": "laravel",
+                    "call": true
+                }
             ]
         }
+    },
+    "orchestration": {
+        "npm": [
+            "concurrently@^9.0.0"
+        ]
     }
 }

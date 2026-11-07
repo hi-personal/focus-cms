@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class FocusSyncCommand extends Command
@@ -31,6 +32,20 @@ class FocusSyncCommand extends Command
     protected array $adminNpmDependencies = [];
 
     protected array $frontNpmDependencies = [];
+
+    protected array $rootNpmDependencies = [];
+
+    protected array $adminVitePlugins = [];
+
+    protected array $frontVitePlugins = [];
+
+    protected array $adminViteOptions = [];
+
+    protected array $frontViteOptions = [];
+
+    protected array $adminViteManagerOptions = [];
+
+    protected array $frontViteManagerOptions = [];
 
     protected string $projectRoot;
 
@@ -165,8 +180,8 @@ class FocusSyncCommand extends Command
             $this->frontConfig['watch']['views'] ?? []
         );
 
-        $this->addNpmPackages(
-            $this->frontConfig['plugins']['npm'] ?? [],
+        $this->collectTargetConfiguration(
+            $this->frontConfig,
             'front'
         );
     }
@@ -206,6 +221,10 @@ class FocusSyncCommand extends Command
 
         $config = $this->readJson($path);
 
+        $this->addRootNpmPackages(
+            $config['orchestration']['npm'] ?? []
+        );
+
         if (($config['type'] ?? null) !== 'app') {
             throw new RuntimeException(
                 'Root focus-build.json must contain type "app".'
@@ -232,8 +251,8 @@ class FocusSyncCommand extends Command
             $this->adminConfig['watch']['views'] ?? []
         );
 
-        $this->addNpmPackages(
-            $this->adminConfig['plugins']['npm'] ?? [],
+        $this->collectTargetConfiguration(
+            $this->adminConfig,
             'admin'
         );
     }
@@ -317,8 +336,8 @@ class FocusSyncCommand extends Command
                     'admin'
                 );
 
-                $this->addNpmPackages(
-                    $admin['plugins']['npm'] ?? [],
+                $this->collectTargetConfiguration(
+                    $admin,
                     'admin'
                 );
             }
@@ -344,12 +363,176 @@ class FocusSyncCommand extends Command
                     'front'
                 );
 
-                $this->addNpmPackages(
-                    $front['plugins']['npm'] ?? [],
+                $this->collectTargetConfiguration(
+                    $front,
                     'front'
                 );
             }
         }
+    }
+
+    /**
+     * Collect target-level npm packages, Vite plugins and Vite options.
+     * Each target remains fully isolated from the other one.
+     */
+    protected function collectTargetConfiguration(
+        array $config,
+        string $target
+    ): void {
+        if (!in_array($target, ['admin', 'front'], true)) {
+            throw new RuntimeException(
+                "Invalid build target '{$target}'. Expected 'admin' or 'front'."
+            );
+        }
+
+        $this->addNpmPackages(
+            $config['plugins']['npm'] ?? [],
+            $target
+        );
+
+        $plugins = $config['plugins']['vite'] ?? [];
+
+        if (!is_array($plugins)) {
+            throw new RuntimeException(
+                "{$target}.plugins.vite must be an array."
+            );
+        }
+
+        foreach ($plugins as $plugin) {
+            if (!is_array($plugin)) {
+                throw new RuntimeException(
+                    "Each {$target}.plugins.vite entry must be an object."
+                );
+            }
+
+            $package = trim((string) ($plugin['package'] ?? ''));
+            $import = trim((string) ($plugin['import'] ?? ''));
+
+            if ($package === '' || $import === '') {
+                throw new RuntimeException(
+                    "Each {$target}.plugins.vite entry requires 'package' and 'import'."
+                );
+            }
+
+            $normalized = [
+                'package' => $package,
+                'import' => $import,
+                'call' => (bool) ($plugin['call'] ?? true),
+            ];
+
+            if (array_key_exists('options', $plugin)) {
+                if (!is_array($plugin['options'])) {
+                    throw new RuntimeException(
+                        "Plugin options for '{$package}' must be an object."
+                    );
+                }
+
+                $normalized['options'] = $plugin['options'];
+            }
+
+            $collection = $target === 'admin'
+                ? $this->adminVitePlugins
+                : $this->frontVitePlugins;
+
+            $existing = null;
+            foreach ($collection as $registered) {
+                if ($registered['import'] === $import) {
+                    $existing = $registered;
+                    break;
+                }
+            }
+
+            if ($existing !== null && $existing !== $normalized) {
+                throw new RuntimeException(
+                    "Conflicting Vite plugin declaration for import '{$import}' in {$target}."
+                );
+            }
+
+            if ($existing === null) {
+                $collection[] = $normalized;
+            }
+
+            if ($target === 'admin') {
+                $this->adminVitePlugins = $collection;
+            } else {
+                $this->frontVitePlugins = $collection;
+            }
+
+            unset($collection);
+        }
+
+        $managerOptions = $config['viteManager'] ?? [];
+
+        if (!is_array($managerOptions)) {
+            throw new RuntimeException(
+                "{$target}.viteManager must be an object."
+            );
+        }
+
+        if ($target === 'admin') {
+            $this->adminViteManagerOptions = array_replace(
+                $this->adminViteManagerOptions,
+                $managerOptions
+            );
+        } else {
+            $this->frontViteManagerOptions = array_replace(
+                $this->frontViteManagerOptions,
+                $managerOptions
+            );
+        }
+
+        $viteOptions = $config['vite'] ?? [];
+
+        if (!is_array($viteOptions)) {
+            throw new RuntimeException(
+                "{$target}.vite must be an object."
+            );
+        }
+
+        if ($target === 'admin') {
+            $this->adminViteOptions = $this->mergeViteOptions(
+                $this->adminViteOptions,
+                $viteOptions
+            );
+        } else {
+            $this->frontViteOptions = $this->mergeViteOptions(
+                $this->frontViteOptions,
+                $viteOptions
+            );
+        }
+    }
+
+    /**
+     * Merge object-like Vite options. Numeric/list arrays are appended;
+     * associative objects are recursively merged, with later declarations
+     * overriding scalar values.
+     */
+    protected function mergeViteOptions(
+        array $base,
+        array $incoming
+    ): array {
+        foreach ($incoming as $key => $value) {
+            if (
+                isset($base[$key]) &&
+                is_array($base[$key]) &&
+                is_array($value)
+            ) {
+                if (array_is_list($base[$key]) && array_is_list($value)) {
+                    $base[$key] = array_values(array_merge($base[$key], $value));
+                } else {
+                    $base[$key] = $this->mergeViteOptions(
+                        $base[$key],
+                        $value
+                    );
+                }
+
+                continue;
+            }
+
+            $base[$key] = $value;
+        }
+
+        return $base;
     }
 
     /*
@@ -494,6 +677,38 @@ class FocusSyncCommand extends Command
         $this->frontWatch = array_values(
             array_unique($this->frontWatch)
         );
+    }
+
+    /** Collect npm packages used only by the root orchestration scripts. */
+    protected function addRootNpmPackages(array $packages): void
+    {
+        foreach ($packages as $specification) {
+            if (!is_string($specification) || trim($specification) === '') {
+                continue;
+            }
+
+            [$name, $version] = $this->parseNpmPackage(trim($specification));
+
+            if (
+                isset($this->rootNpmDependencies[$name]) &&
+                $this->rootNpmDependencies[$name] !== $version &&
+                $this->rootNpmDependencies[$name] !== '*' &&
+                $version !== '*'
+            ) {
+                throw new RuntimeException(
+                    "Root orchestration npm version conflict for '{$name}'."
+                );
+            }
+
+            if (
+                !isset($this->rootNpmDependencies[$name]) ||
+                $this->rootNpmDependencies[$name] === '*'
+            ) {
+                $this->rootNpmDependencies[$name] = $version;
+            }
+        }
+
+        ksort($this->rootNpmDependencies);
     }
 
     /*
@@ -737,14 +952,18 @@ class FocusSyncCommand extends Command
         $apps = [
             'admin' => [
                 'entry_points' => $this->adminEntries,
-                'build_directory' => 'build/admin',
-                'hot_file' => 'build/admin/hot',
+                'build_directory' => $this->adminViteManagerOptions['buildDirectory']
+                    ?? 'build/admin',
+                'hot_file' => public_path($this->adminViteManagerOptions['hotFile']
+                    ?? 'build/admin/hot'),
             ],
 
             'front' => [
                 'entry_points' => $this->frontEntries,
-                'build_directory' => 'build/front',
-                'hot_file' => 'build/front/hot',
+                'build_directory' => $this->frontViteManagerOptions['buildDirectory']
+                    ?? 'build/front',
+                'hot_file' => public_path($this->frontViteManagerOptions['hotFile']
+                    ?? 'build/front/hot'),
             ],
         ];
 
@@ -787,6 +1006,13 @@ class FocusSyncCommand extends Command
 
     protected function generateRootPackageJson(): void
     {
+        if (!isset($this->rootNpmDependencies['concurrently'])) {
+            throw new RuntimeException(
+                'Root focus-build.json must declare concurrently under orchestration.npm ' .
+                '(for example: concurrently@^9.0.0), because dev:all uses it.'
+            );
+        }
+
         /*
          * The root package.json is only the orchestration layer.
          *
@@ -836,9 +1062,7 @@ class FocusSyncCommand extends Command
                     'npm run build:admin && npm run build:front',
             ],
 
-            'devDependencies' => [
-                'concurrently' => '^9.0.0',
-            ],
+            'devDependencies' => $this->rootNpmDependencies,
         ];
 
         $path = base_path(
@@ -875,19 +1099,15 @@ class FocusSyncCommand extends Command
             'type' => 'module',
 
             'scripts' => [
-                'dev' => 'vite',
-                'build' => 'vite build',
-                'watch' => 'vite',
+                'dev' => 'NODE_PATH=$(pwd)/node_modules vite',
+                'build' => 'NODE_PATH=$(pwd)/node_modules vite build',
+                'watch' => 'NODE_PATH=$(pwd)/node_modules vite',
             ],
 
             'dependencies' =>
                 $this->adminNpmDependencies,
 
-            'devDependencies' => [
-                '@tailwindcss/vite' => '4.3.3',
-                'laravel-vite-plugin' => '^3.2.0',
-                'vite' => '^8.2.2',
-            ],
+            'devDependencies' => new \stdClass(),
         ];
 
         $path = base_path(
@@ -924,19 +1144,15 @@ class FocusSyncCommand extends Command
             'type' => 'module',
 
             'scripts' => [
-                'dev' => 'vite',
-                'build' => 'vite build',
-                'watch' => 'vite',
+                'dev' => 'NODE_PATH=$(pwd)/node_modules vite',
+                'build' => 'NODE_PATH=$(pwd)/node_modules vite build',
+                'watch' => 'NODE_PATH=$(pwd)/node_modules vite',
             ],
 
             'dependencies' =>
                 $this->frontNpmDependencies,
 
-            'devDependencies' => [
-                '@tailwindcss/vite' => '4.3.3',
-                'laravel-vite-plugin' => '^3.2.0',
-                'vite' => '^8.2.2',
-            ],
+            'devDependencies' => new \stdClass(),
         ];
 
         $path = base_path(
@@ -966,275 +1182,365 @@ class FocusSyncCommand extends Command
 
     protected function generateAdminViteConfig(): void
     {
-        $path = base_path(
-            'tools/admin/generated/vite.config.js'
-        );
-
-        $content = <<<'JS'
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const projectRoot = path.resolve(__dirname, '../../..');
-
-export default defineConfig({
-    root: projectRoot,
-
-    cacheDir: path.resolve(
-        projectRoot,
-        'tools/admin/generated/.vite'
-    ),
-
-    plugins: [
-        tailwindcss(),
-
-        laravel({
-            input: __ADMIN_INPUT__,
-
-            refresh: __ADMIN_REFRESH__,
-
-            hotFile: path.resolve(
-                projectRoot,
-                'public/build/admin/hot'
-            ),
-            buildDirectory: 'build/admin',
-        }),
-    ],
-
-    server: {
-        host: '0.0.0.0',
-        port: __ADMIN_PORT__,
-        strictPort: true,
-
-        origin: 'http://localhost:__ADMIN_PORT__',
-
-        cors: {
-            origin: [
-                'http://localhost:90',
-                'http://0.0.0.0:90',
-            ],
-        },
-
-        hmr: {
-            host: 'localhost',
-        },
-
-        fs: {
-            strict: false,
-        },
-
-        watch: {
-            ignored: [
-                '**/public/page-cache/**',
-            ],
-        },
-    },
-
-    resolve: {
-        modules: [
-            path.resolve(
-                projectRoot,
-                'tools/admin/generated/node_modules'
-            ),
-
-            path.resolve(
-                projectRoot,
-                'node_modules'
-            ),
-        ],
-    },
-
-    build: {
-        outDir: path.resolve(
-            projectRoot,
-            'public/build/admin'
-        ),
-
-        assetsDir: 'assets',
-        manifest: 'manifest.json',
-        emptyOutDir: false,
-    },
-});
-JS;
-
-        $content = str_replace(
-            '__ADMIN_PORT__',
+        $this->generateTargetViteConfig(
+            'admin',
             $this->adminPort,
-            $content
-        );
-
-        $content = str_replace(
-            '__ADMIN_INPUT__',
-            $this->exportJsArray(
-                $this->adminEntries
-            ),
-            $content
-        );
-
-        $content = str_replace(
-            '__ADMIN_REFRESH__',
-            $this->exportJsArray(
-                $this->adminWatch
-            ),
-            $content
-        );
-
-        File::ensureDirectoryExists(
-            dirname($path)
-        );
-
-        File::put(
-            $path,
-            $content
+            $this->adminEntries,
+            $this->adminWatch,
+            $this->adminVitePlugins,
+            $this->adminViteOptions
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Front Vite config
-    |--------------------------------------------------------------------------
-    */
-
     protected function generateFrontViteConfig(): void
     {
-        $path = base_path(
-            'tools/front/generated/vite.config.js'
-        );
-
-        $content = <<<'JS'
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const projectRoot = path.resolve(__dirname, '../../..');
-
-export default defineConfig({
-    root: projectRoot,
-
-    cacheDir: path.resolve(
-        projectRoot,
-        'tools/front/generated/.vite'
-    ),
-
-    plugins: [
-        tailwindcss(),
-
-        laravel({
-            input: __FRONT_INPUT__,
-
-            refresh: __FRONT_REFRESH__,
-
-            hotFile: path.resolve(
-                projectRoot,
-                'public/build/front/hot'
-            ),
-            buildDirectory: 'build/front',
-        }),
-    ],
-
-    server: {
-        host: '0.0.0.0',
-        port: __FRONT_PORT__,
-        strictPort: true,
-
-        origin: 'http://localhost:__FRONT_PORT__',
-
-        cors: {
-            origin: [
-                'http://localhost:90',
-                'http://0.0.0.0:90',
-            ],
-        },
-
-        hmr: {
-            host: 'localhost',
-        },
-
-        fs: {
-            strict: false,
-        },
-
-        watch: {
-            ignored: [
-                '**/public/page-cache/**',
-            ],
-        },
-    },
-
-    resolve: {
-        alias: {
-            '@boxicons/js': path.resolve(
-                projectRoot,
-                'tools/front/generated/node_modules/@boxicons/js'
-            ),
-        },
-
-        modules: [
-            path.resolve(
-                projectRoot,
-                'tools/front/generated/node_modules'
-            ),
-
-            path.resolve(
-                projectRoot,
-                'node_modules'
-            ),
-        ],
-    },
-
-    build: {
-        outDir: path.resolve(
-            projectRoot,
-            'public/build/front'
-        ),
-
-        assetsDir: 'assets',
-        manifest: 'manifest.json',
-        emptyOutDir: false,
-    },
-});
-JS;
-
-        $content = str_replace(
-            '__FRONT_PORT__',
+        $this->generateTargetViteConfig(
+            'front',
             $this->frontPort,
-            $content
+            $this->frontEntries,
+            $this->frontWatch,
+            $this->frontVitePlugins,
+            $this->frontViteOptions
+        );
+    }
+
+    /**
+     * Generate an isolated Vite config for one FocusCMS target.
+     * Laravel Vite integration is not injected here: it is declared in
+     * focus-build.json like every other Vite plugin.
+     */
+    protected function generateTargetViteConfig(
+        string $target,
+        string $port,
+        array $entries,
+        array $watch,
+        array $plugins,
+        array $viteOptions
+    ): void {
+        $path = base_path(
+            "tools/{$target}/generated/vite.config.js"
         );
 
-        $content = str_replace(
-            '__FRONT_INPUT__',
-            $this->exportJsArray(
-                $this->frontEntries
-            ),
-            $content
+        $imports = ["import { defineConfig } from 'vite';"];
+        $pluginExpressions = [];
+        $laravelPlugin = null;
+
+        foreach ($plugins as $plugin) {
+            $package = $plugin['package'];
+            $import = $plugin['import'];
+            $call = $plugin['call'];
+            $pluginOptions = $plugin['options'] ?? [];
+
+            if (!preg_match('/^[A-Za-z_$][A-Za-z0-9_$]*$/', $import)) {
+                throw new RuntimeException(
+                    "Invalid Vite plugin import identifier '{$import}' in {$target}."
+                );
+            }
+
+            $imports[] = "import {$import} from " .
+                json_encode(
+                    $package,
+                    JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                ) . ';';
+
+            if ($package === 'laravel-vite-plugin') {
+                $laravelPlugin = [
+                    'import' => $import,
+                    'options' => $pluginOptions,
+                ];
+                continue;
+            }
+
+            if ($call) {
+                $expression = $import . '(';
+
+                if ($pluginOptions !== []) {
+                    $expression .= $this->exportJsConfigValue($pluginOptions);
+                }
+
+                $expression .= ')';
+            } else {
+                $expression = $import;
+            }
+
+            $pluginExpressions[] = $expression;
+        }
+
+        if ($laravelPlugin === null) {
+            throw new RuntimeException(
+                "The {$target} target must declare laravel-vite-plugin in plugins.vite " .
+                "(package: laravel-vite-plugin, import: laravel)."
+            );
+        }
+
+        $imports[] = "import path from 'node:path';";
+        $imports[] = "import { fileURLToPath } from 'node:url';";
+
+        // FocusCMS defaults; target focus-build.json declarations may override them.
+        $defaults = [
+            'root' => '__FOCUS_PROJECT_ROOT__',
+            'cacheDir' => "__FOCUS_PROJECT_ROOT__/tools/{$target}/generated/.vite",
+            'server' => [
+                'host' => '0.0.0.0',
+                'port' => (int) $port,
+                'strictPort' => true,
+                'origin' => "http://localhost:{$port}",
+                'cors' => [
+                    'origin' => [
+                        'http://localhost:90',
+                        'http://0.0.0.0:90',
+                    ],
+                ],
+                'hmr' => [
+                    'host' => 'localhost',
+                ],
+                'fs' => [
+                    'strict' => false,
+                ],
+                'watch' => [
+                    'ignored' => [
+                        '**/public/page-cache/**',
+                    ],
+                ],
+            ],
+            'build' => [
+                'outDir' => "__FOCUS_PROJECT_ROOT__/public/build/{$target}",
+                'assetsDir' => 'assets',
+                'manifest' => 'manifest.json',
+                'emptyOutDir' => false,
+            ],
+        ];
+
+        $options = $this->mergeViteOptions(
+            $defaults,
+            $viteOptions
         );
 
-        $content = str_replace(
-            '__FRONT_REFRESH__',
-            $this->exportJsArray(
-                $this->frontWatch
-            ),
-            $content
+        // The Vite config's plugins list is generated only from plugins.vite.
+        unset($options['plugins']);
+
+        $laravelOptions = $laravelPlugin['options'];
+        $managerOptions = $target === 'admin'
+            ? $this->adminViteManagerOptions
+            : $this->frontViteManagerOptions;
+
+        $managerBuildDirectory = $managerOptions['buildDirectory']
+            ?? "build/{$target}";
+        $managerHotFile = $managerOptions['hotFile']
+            ?? "build/{$target}/hot";
+
+        $laravelOptions = array_merge(
+            $laravelOptions,
+            [
+                'input' => $entries,
+                'refresh' => $watch,
+                'hotFile' => "__FOCUS_PROJECT_ROOT__/public/{$managerHotFile}",
+                'buildDirectory' => $managerBuildDirectory,
+            ]
         );
 
-        File::ensureDirectoryExists(
-            dirname($path)
+        $pluginExpressions[] = $laravelPlugin['import'] . '(' .
+            $this->exportJsConfigValue($laravelOptions) .
+            ')';
+
+        $content = implode("\n", $imports) . "\n\n";
+        $content .= "const __filename = fileURLToPath(import.meta.url);\n";
+        $content .= "const __dirname = path.dirname(__filename);\n";
+        $content .= "const projectRoot = path.resolve(__dirname, '../../..');\n";
+        $content .= "const isolatedNodeModules = path.resolve(__dirname, 'node_modules');\n";
+        $content .= "const isolatedTargetName = " .
+            json_encode($target, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) .
+            ";\n";
+
+        $content .= <<<'JS'
+/* Enforce isolated resolution for bare imports from application source files. */
+const focusIsolatedPackageResolver = {
+    name: 'focus-isolated-package-resolver',
+    enforce: 'pre',
+
+    async resolveId(source, importer) {
+        if (
+            source.startsWith('.') ||
+            source.startsWith('/') ||
+            source.startsWith('\\0') ||
+            source.startsWith('node:')
+        ) {
+            return null;
+        }
+
+        // Let Vite resolve project-root source files and configured entry points.
+        const projectSourcePath = path.resolve(projectRoot, source);
+
+        if (
+            projectSourcePath.startsWith(projectRoot + path.sep) &&
+            (
+                source.startsWith('resources/') ||
+                source.startsWith('Themes/')
+            )
+        ) {
+            return null;
+        }
+        /*
+         * App source files are outside the generated target directory.
+         * Resolve their bare imports from the isolated target instead.
+         *
+         * For imports originating inside a package, keep the real importer
+         * so nested package dependencies can resolve in their own context.
+         */
+        const importerIsInsideTarget =
+            importer &&
+            path.relative(isolatedNodeModules, importer) !== '..' &&
+            !path.relative(isolatedNodeModules, importer).startsWith('..' + path.sep) &&
+            !path.isAbsolute(path.relative(isolatedNodeModules, importer));
+
+        const resolutionImporter = importerIsInsideTarget
+            ? importer
+            : path.join(__dirname, '__focus_target_resolver__.js');
+
+        const resolved = await this.resolve(
+            source,
+            resolutionImporter,
+            { skipSelf: true }
         );
 
-        File::put(
-            $path,
-            $content
+        if (!resolved) {
+            throw new Error(
+                `Cannot resolve '${source}' from this target. ` +
+                `Install it in tools/${isolatedTargetName}/generated.`
+            );
+        }
+
+        if (resolved.external || resolved.id.startsWith('node:')) {
+            return null;
+        }
+
+        const resolvedId = resolved.id.startsWith('file:')
+            ? fileURLToPath(resolved.id)
+            : resolved.id;
+
+        const resolvedPath = resolvedId.split('?')[0];
+
+        // Vite's optimized dependencies are served from its own cache directory.
+        const isolatedViteCache = path.resolve(__dirname, '.vite');
+        const cacheRelative = path.relative(isolatedViteCache, resolvedPath);
+
+        if (
+            cacheRelative === '' ||
+            (
+                cacheRelative !== '..' &&
+                !cacheRelative.startsWith('..' + path.sep) &&
+                !path.isAbsolute(cacheRelative)
+            )
+        ) {
+            return resolved.id;
+        }
+
+        if (!path.isAbsolute(resolvedPath)) {
+            return null;
+        }
+
+        const relative = path.relative(isolatedNodeModules, resolvedPath);
+
+        if (
+            relative === '..' ||
+            relative.startsWith('..' + path.sep) ||
+            path.isAbsolute(relative)
+        ) {
+            throw new Error(
+                `Import '${source}' resolved outside this target's isolated ` +
+                `node_modules: ${resolvedPath}. ` +
+                `Install the dependency in tools/${isolatedTargetName}/generated.`
+            );
+        }
+
+        return resolved.id;
+    },
+};
+
+JS;
+        $content .= "\n";
+        $content .= "export default defineConfig({\n";
+        $optionLines = explode(
+            "\n",
+            $this->exportJsConfigObject($options, 0)
         );
+        array_shift($optionLines); // opening brace
+        array_pop($optionLines);    // closing brace
+        $content .= implode("\n", $optionLines) . "\n";
+        $content .= "    plugins: [\n";
+        $content .= "        focusIsolatedPackageResolver,\n";
+
+        foreach ($pluginExpressions as $expression) {
+            $content .= '        ' . $expression . ",\n";
+        }
+
+        $content .= "    ],\n";
+        $content .= "});\n";
+
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, $content);
+    }
+
+    /** Export a JSON-compatible value to a JS expression, resolving project-root tokens. */
+    protected function exportJsConfigValue(
+        mixed $value,
+        int $indent = 0
+    ): string {
+        if (is_array($value)) {
+            return $this->exportJsConfigObject($value, $indent);
+        }
+
+        if (is_string($value)) {
+            if ($value === '__FOCUS_PROJECT_ROOT__') {
+                return 'projectRoot';
+            }
+
+            $prefix = '__FOCUS_PROJECT_ROOT__/';
+            if (str_starts_with($value, $prefix)) {
+                $relative = substr($value, strlen($prefix));
+
+                return 'path.resolve(projectRoot, ' .
+                    json_encode($relative, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) .
+                    ')';
+            }
+        }
+
+        return json_encode(
+            $value,
+            JSON_UNESCAPED_SLASHES |
+            JSON_UNESCAPED_UNICODE |
+            JSON_THROW_ON_ERROR
+        );
+    }
+
+    /** Export an array/object as a JS object/array with stable indentation. */
+    protected function exportJsConfigObject(
+        array $value,
+        int $indent = 0
+    ): string {
+        $isList = array_is_list($value);
+        $open = $isList ? '[' : '{';
+        $close = $isList ? ']' : '}';
+        $pad = str_repeat('    ', $indent);
+        $childPad = str_repeat('    ', $indent + 1);
+        $lines = [$open];
+
+        foreach ($value as $key => $item) {
+            $keyText = $isList
+                ? ''
+                : json_encode((string) $key, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . ': ';
+
+            $lines[] = $childPad . $keyText .
+                $this->exportJsConfigValue($item, $indent + 1) . ',';
+        }
+
+        if (count($lines) === 1) {
+            return $open . $close;
+        }
+
+        $lines[] = $pad . $close;
+
+        return implode("\n", $lines);
     }
 
     /*
@@ -1339,6 +1645,16 @@ JS;
         $this->line(
             '   Front npm packages: ' .
             count($this->frontNpmDependencies)
+        );
+
+        $this->line(
+            '   Admin Vite plugins: ' .
+            count($this->adminVitePlugins)
+        );
+
+        $this->line(
+            '   Front Vite plugins: ' .
+            count($this->frontVitePlugins)
         );
 
         $this->newLine();

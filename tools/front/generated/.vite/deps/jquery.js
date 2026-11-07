@@ -1,4 +1,4 @@
-//#region ../../../node_modules/jquery/dist-module/jquery.module.js
+//#region node_modules/jquery/dist-module/jquery.module.js
 /*!
 * jQuery JavaScript Library v4.0.0
 * https://jquery.com/

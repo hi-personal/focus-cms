@@ -1,43 +1,37 @@
 {
-  "hash": "11706c14",
-  "configHash": "c94c66cf",
-  "lockfileHash": "628bf11b",
-  "browserHash": "b6d53cc6",
+  "hash": "bb60f787",
+  "configHash": "a699cff7",
+  "lockfileHash": "9bccbc44",
+  "browserHash": "a6650ebe",
   "optimized": {
-    "@boxicons/js": {
-      "src": "../../node_modules/@boxicons/js/dist/esm/index.js",
-      "file": "@boxicons_js.js",
-      "fileHash": "9a0a04e0",
-      "needsInterop": false
-    },
-    "alpinejs": {
-      "src": "../../../../../node_modules/alpinejs/dist/module.esm.js",
-      "file": "alpinejs.js",
-      "fileHash": "1b536cce",
+    "iconify-icon": {
+      "src": "../../node_modules/iconify-icon/dist/iconify-icon.mjs",
+      "file": "iconify-icon.js",
+      "fileHash": "59de07b6",
       "needsInterop": false
     },
     "jquery": {
-      "src": "../../../../../node_modules/jquery/dist-module/jquery.module.js",
+      "src": "../../node_modules/jquery/dist-module/jquery.module.js",
       "file": "jquery.js",
-      "fileHash": "bb50df2d",
+      "fileHash": "e1b9ec74",
       "needsInterop": false
     },
     "js-cookie": {
-      "src": "../../../../../node_modules/js-cookie/dist/js.cookie.mjs",
+      "src": "../../node_modules/js-cookie/dist/js.cookie.mjs",
       "file": "js-cookie.js",
-      "fileHash": "64fc0d27",
+      "fileHash": "392516c0",
       "needsInterop": false
     },
     "photoswipe": {
-      "src": "../../../../../node_modules/photoswipe/dist/photoswipe.esm.js",
+      "src": "../../node_modules/photoswipe/dist/photoswipe.esm.js",
       "file": "photoswipe.js",
-      "fileHash": "579bcc75",
+      "fileHash": "9b797108",
       "needsInterop": false
     },
     "photoswipe/lightbox": {
-      "src": "../../../../../node_modules/photoswipe/dist/photoswipe-lightbox.esm.js",
+      "src": "../../node_modules/photoswipe/dist/photoswipe-lightbox.esm.js",
       "file": "photoswipe_lightbox.js",
-      "fileHash": "ced485e5",
+      "fileHash": "33a98c59",
       "needsInterop": false
     }
   },

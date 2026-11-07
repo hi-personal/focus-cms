@@ -1,42 +1,6 @@
 {
-  "node_modules/@mdi/font/fonts/materialdesignicons-webfont.eot": {
-    "file": "assets/materialdesignicons-webfont-CSr8KVlo.eot",
-    "src": "node_modules/@mdi/font/fonts/materialdesignicons-webfont.eot"
-  },
-  "node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf": {
-    "file": "assets/materialdesignicons-webfont-B7mPwVP_.ttf",
-    "src": "node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf"
-  },
-  "node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff": {
-    "file": "assets/materialdesignicons-webfont-PXm3-2wK.woff",
-    "src": "node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff"
-  },
-  "node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2": {
-    "file": "assets/materialdesignicons-webfont-Dp5v-WZN.woff2",
-    "src": "node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2"
-  },
-  "node_modules/boxicons/fonts/boxicons.eot": {
-    "file": "assets/boxicons-CSrLvhY_.eot",
-    "src": "node_modules/boxicons/fonts/boxicons.eot"
-  },
-  "node_modules/boxicons/fonts/boxicons.svg": {
-    "file": "assets/boxicons-Dp7W9qN3.svg",
-    "src": "node_modules/boxicons/fonts/boxicons.svg"
-  },
-  "node_modules/boxicons/fonts/boxicons.ttf": {
-    "file": "assets/boxicons-EIQNrSje.ttf",
-    "src": "node_modules/boxicons/fonts/boxicons.ttf"
-  },
-  "node_modules/boxicons/fonts/boxicons.woff": {
-    "file": "assets/boxicons-CTVby2V1.woff",
-    "src": "node_modules/boxicons/fonts/boxicons.woff"
-  },
-  "node_modules/boxicons/fonts/boxicons.woff2": {
-    "file": "assets/boxicons-CeGEncwm.woff2",
-    "src": "node_modules/boxicons/fonts/boxicons.woff2"
-  },
   "resources/css/app.css": {
-    "file": "assets/app-qVfRdljO.css",
+    "file": "assets/app-BxpBYFRG.css",
     "name": "app",
     "names": [
       "app.css"
@@ -56,9 +20,45 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DlOXgmZn.js",
+    "file": "assets/app-B3bwWah6.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
+  },
+  "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.eot": {
+    "file": "assets/materialdesignicons-webfont-CSr8KVlo.eot",
+    "src": "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.eot"
+  },
+  "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf": {
+    "file": "assets/materialdesignicons-webfont-B7mPwVP_.ttf",
+    "src": "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf"
+  },
+  "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff": {
+    "file": "assets/materialdesignicons-webfont-PXm3-2wK.woff",
+    "src": "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff"
+  },
+  "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2": {
+    "file": "assets/materialdesignicons-webfont-Dp5v-WZN.woff2",
+    "src": "tools/admin/generated/node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2"
+  },
+  "tools/admin/generated/node_modules/boxicons/fonts/boxicons.eot": {
+    "file": "assets/boxicons-CSrLvhY_.eot",
+    "src": "tools/admin/generated/node_modules/boxicons/fonts/boxicons.eot"
+  },
+  "tools/admin/generated/node_modules/boxicons/fonts/boxicons.svg": {
+    "file": "assets/boxicons-Dp7W9qN3.svg",
+    "src": "tools/admin/generated/node_modules/boxicons/fonts/boxicons.svg"
+  },
+  "tools/admin/generated/node_modules/boxicons/fonts/boxicons.ttf": {
+    "file": "assets/boxicons-EIQNrSje.ttf",
+    "src": "tools/admin/generated/node_modules/boxicons/fonts/boxicons.ttf"
+  },
+  "tools/admin/generated/node_modules/boxicons/fonts/boxicons.woff": {
+    "file": "assets/boxicons-CTVby2V1.woff",
+    "src": "tools/admin/generated/node_modules/boxicons/fonts/boxicons.woff"
+  },
+  "tools/admin/generated/node_modules/boxicons/fonts/boxicons.woff2": {
+    "file": "assets/boxicons-CeGEncwm.woff2",
+    "src": "tools/admin/generated/node_modules/boxicons/fonts/boxicons.woff2"
   }
 }

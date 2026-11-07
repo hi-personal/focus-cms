@@ -9,7 +9,7 @@ return [
                 1 => 'resources/css/app.css',
             ],
             'build_directory' => 'build/admin',
-            'hot_file' => 'build/admin/hot',
+            'hot_file' => '/var/www/focuscms/public/build/admin/hot',
         ],
         'front' => [
             'entry_points' => [
@@ -17,7 +17,7 @@ return [
                 1 => 'Themes/FocusDefaultTheme/resources/css/theme.css',
             ],
             'build_directory' => 'build/front',
-            'hot_file' => 'build/front/hot',
+            'hot_file' => '/var/www/focuscms/public/build/front/hot',
         ],
     ],
 

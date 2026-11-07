@@ -1,12 +1,9 @@
-//#region ../../../node_modules/js-cookie/dist/js.cookie.mjs
-/*! js-cookie v3.0.8 | MIT */
+//#region node_modules/js-cookie/dist/js.cookie.mjs
+/*! js-cookie v3.0.5 | MIT */
 function assign(target) {
 	for (var i = 1; i < arguments.length; i++) {
 		var source = arguments[i];
-		for (var key in source) {
-			if (key === "__proto__") continue;
-			target[key] = source[key];
-		}
+		for (var key in source) target[key] = source[key];
 	}
 	return target;
 }
@@ -44,9 +41,9 @@ function init(converter, defaultAttributes) {
 			var value = parts.slice(1).join("=");
 			try {
 				var found = decodeURIComponent(parts[0]);
-				if (!(found in jar)) jar[found] = converter.read(value, found);
+				jar[found] = converter.read(value, found);
 				if (name === found) break;
-			} catch (_e) {}
+			} catch (e) {}
 		}
 		return name ? jar[name] : jar;
 	}
