@@ -188,10 +188,10 @@ class CustomMarkdownService
 
         if ($nl2br == true) {
             $html = preg_replace_callback(
-                '/<p[^>]*>(.*?)<\/p>/is',
+                '/(<p\b[^>]*>)(.*?)(<\/p>)/is',
                 function($matches) {
-                    $content = nl2br($matches[1]);
-                    return "<p>{$content}</p>";
+                    $content = nl2br($matches[2]);
+                    return $matches[1] . $content . $matches[3];
                 },
                 $html
             );
